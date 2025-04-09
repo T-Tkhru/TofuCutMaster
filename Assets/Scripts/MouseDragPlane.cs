@@ -8,6 +8,10 @@ public class MouseDragPlane : MonoBehaviour
     private bool isDragging = false; // ドラッグ中かどうか
     
     private Vector3 TofuPos; // Tofuの位置
+    private int cutCount = 0; // カット回数をカウント
+    private string cameraPos = "Top"; // カメラの位置
+    public int cutLimitTop = 4; // 上からのカット回数制限
+    public int cutLimitSide = 1; // 横からのカット回数制限
 
     void Start()
     {
@@ -52,6 +56,19 @@ public class MouseDragPlane : MonoBehaviour
                 sphere.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
                 CreatePlaneFromDrag(dragStartPos, dragEndPos, TofuPos);
                 isDragging = false;
+
+                // カット回数をカウント
+                cutCount++;
+                if (cameraPos == "Top" && cutCount >= cutLimitTop)
+                {
+                    MoveCamera();
+                    cameraPos = "Side"; // カメラの位置を横に変更
+                    cutCount = 0; // カット回数をリセット
+                }
+                else if (cameraPos == "Side" && cutCount >= cutLimitSide)
+                {
+                    Debug.Log("カット回数の上限に達しました。終了します");
+                }
             }
         }
     }
@@ -60,7 +77,14 @@ public class MouseDragPlane : MonoBehaviour
     Vector3 GetMouseWorldPosition()
     {
         Vector3 mousePosition = Input.mousePosition;
-        mousePosition.z = 1.5f;  // カメラからの距離を設定（調整が必要な場合があります）        
+        if (cameraPos == "Top")
+        {
+            mousePosition.z = 1.75f;  // カメラからTofuの面までの距離
+        }
+        else if (cameraPos == "Side")
+        {
+            mousePosition.z = 1.5f;  // カメラからTofuの面までの距離
+        }
         return Camera.main.ScreenToWorldPoint(mousePosition);
     }
 
@@ -68,7 +92,15 @@ public class MouseDragPlane : MonoBehaviour
     void CreatePlaneFromDrag(Vector3 startPos, Vector3 endPos, Vector3 cubeCenterPos)
     {
         Vector3 centerPos = (startPos + endPos) / 2; // ドラッグの中心位置
-        centerPos.z = cubeCenterPos.z; // Y座標をCubeのY座標に合わせる
+        if (cameraPos == "Top")
+        {
+            centerPos.y = cubeCenterPos.y; 
+        }
+        else if (cameraPos == "Side")
+        {
+            centerPos.z = cubeCenterPos.z; 
+        }
+        
         Vector3 scale = new Vector3(0.2f, 0.1f, 0.2f);  // スケール
 
         GameObject newPlane = Instantiate(planePrefab, centerPos, Quaternion.identity);
@@ -78,9 +110,19 @@ public class MouseDragPlane : MonoBehaviour
         Vector3 direction = endPos - startPos;
         Quaternion rotation = Quaternion.LookRotation(direction);
         newPlane.transform.rotation = rotation;
+        if (cameraPos == "Top")
+        {
+            newPlane.transform.Rotate(0, 0, 90); 
+        }
+        newPlane.GetComponent<SliceObjects>().Invoke(nameof(SliceObjects.Cutting), 0.01f);
+        Destroy(newPlane, 0.01f); 
+    }
 
-        newPlane.GetComponent<SliceObjects>().Invoke(nameof(SliceObjects.Cutting), 0.1f);
-        Destroy(newPlane, 0.2f); 
-
+    // カメラを移動する関数
+    void MoveCamera()
+    {
+        Camera.main.transform.position = new Vector3(8, 2, 0); // カメラを上方向に移動
+        Camera.main.transform.rotation = Quaternion.Euler(0, 0, 0); // カメラの向きを上に向ける
+        Debug.Log("カメラが移動しました");
     }
 }
