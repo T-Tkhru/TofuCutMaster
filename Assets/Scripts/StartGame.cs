@@ -1,6 +1,19 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class StartGame : MonoBehaviour
 {
-    public int cutCount = 0; // カット回数をカウント
+    public void easyStart()
+    {
+        CutNumManager.Instance.cutLimitTop = 4;
+        CutNumManager.Instance.cutLimitSide = 1;
+        SceneManager.LoadScene("MainGame");
+    }
+
+    public void hardStart()
+    {
+        CutNumManager.Instance.cutLimitTop = 6;
+        CutNumManager.Instance.cutLimitSide = 2;
+        SceneManager.LoadScene("MainGame");
+    }
 }

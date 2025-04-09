@@ -25,6 +25,9 @@ public class MouseDragPlane : MonoBehaviour
         {
             Debug.LogError("Tofuオブジェクトが見つかりません！");
         }
+
+        cutLimitTop = CutNumManager.Instance.cutLimitTop;
+        cutLimitSide = CutNumManager.Instance.cutLimitSide;
     }
 
     void Update()
