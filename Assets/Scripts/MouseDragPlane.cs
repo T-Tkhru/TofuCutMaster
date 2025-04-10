@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class MouseDragPlane : MonoBehaviour
@@ -30,7 +31,7 @@ public class MouseDragPlane : MonoBehaviour
         cutLimitSide = CutNumManager.Instance.cutLimitSide;
     }
 
-    void Update()
+    async Task Update()
     {
         // マウスの左ボタンが押された時
         if (Input.GetMouseButtonDown(0))
@@ -71,6 +72,21 @@ public class MouseDragPlane : MonoBehaviour
                 else if (cameraPos == "Side" && cutCount >= cutLimitSide)
                 {
                     Debug.Log("カット回数の上限に達しました。終了します");
+                    await Task.Delay(100); 
+                    GameObject[] sliceables = GameObject.FindGameObjectsWithTag("Sliceable");
+                    foreach (GameObject obj in sliceables)
+                    {
+                        //Rigidbodyを取得し、kinematicをfalseに設定
+                        Rigidbody rb = obj.GetComponent<Rigidbody>();
+                        if (rb != null)
+                        {
+                            rb.isKinematic = false; // Rigidbodyを動かせるようにする
+                        }
+                        else
+                        {
+                            Debug.LogWarning("Rigidbodyが見つかりません: " + obj.name);
+                        }
+                    }
                 }
             }
         }

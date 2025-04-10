@@ -31,6 +31,7 @@ public class SliceObjects : MonoBehaviour
         rb.isKinematic = true;
 
         obj.layer = LayerMask.NameToLayer("Sliceable"); // Sliceableレイヤーを適用
+        obj.tag = "Sliceable"; // Sliceableタグを適用
     }
 
     public void Cutting()
