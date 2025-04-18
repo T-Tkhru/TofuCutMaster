@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using UnityEngine;
+using System.Linq;
 
 public class MouseDragPlane : MonoBehaviour
 {
@@ -80,21 +81,37 @@ public class MouseDragPlane : MonoBehaviour
                 else if (cameraPos == "Side" && cutCount >= cutLimitSide)
                 {
                     Debug.Log("カット回数の上限に達しました。終了します");
-                    await Task.Delay(100); 
+                    await Task.Delay(100);
                     GameObject[] sliceables = GameObject.FindGameObjectsWithTag("Sliceable");
+                    float[] volumeList = new float[sliceables.Length];
                     foreach (GameObject obj in sliceables)
                     {
                         //Rigidbodyを取得し、kinematicをfalseに設定
                         Rigidbody rb = obj.GetComponent<Rigidbody>();
                         if (rb != null)
                         {
-                            rb.isKinematic = false; 
+                            rb.isKinematic = false;
                         }
                         else
                         {
                             Debug.LogWarning("Rigidbodyが見つかりません: " + obj.name);
                         }
+                        // TofuPieceスクリプトを取得し、体積を計算
+                        TofuPiece tofuPiece = obj.GetComponent<TofuPiece>();
+                        if (tofuPiece != null)
+                        {
+                            float volume = tofuPiece.VolumeOfMesh(obj.GetComponent<MeshFilter>().mesh);
+                            volumeList[System.Array.IndexOf(sliceables, obj)] = volume;
+                        }
+                        else
+                        {
+                            Debug.LogWarning("TofuPieceスクリプトが見つかりません: " + obj.name);
+                        }
                     }
+                    Debug.Log("VolumeList: " + string.Join(", ", volumeList));
+                    Debug.Log("Total Volume: " + volumeList.Sum());
+                    Debug.Log("最小値: " + volumeList.Min());
+                    Debug.Log("最大値: " + volumeList.Max());
                 }
             }
         }

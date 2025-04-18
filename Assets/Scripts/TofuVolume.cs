@@ -8,7 +8,7 @@ public class TofuPiece : MonoBehaviour
         Debug.Log("Name: " + gameObject.name + ", Volume: " + volume);
     }
 
-    float VolumeOfMesh(Mesh mesh)
+    public float VolumeOfMesh(Mesh mesh)
     {
         if (mesh == null) return 0;
 
