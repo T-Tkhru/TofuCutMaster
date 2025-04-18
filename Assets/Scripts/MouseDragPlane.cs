@@ -58,6 +58,14 @@ public class MouseDragPlane : MonoBehaviour
                 GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                 sphere.transform.position = dragEndPos;
                 sphere.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                //スタートからエンドまでの距離を計算し、短い場合は処理をスキップ
+                float distance = Vector3.Distance(dragStartPos, dragEndPos);
+                if (distance < 0.1f)
+                {
+                    Debug.Log("ドラッグ距離が短いため、処理をスキップします。");
+                    isDragging = false;
+                    return;
+                }
                 CreatePlaneFromDrag(dragStartPos, dragEndPos, TofuPos);
                 isDragging = false;
 
