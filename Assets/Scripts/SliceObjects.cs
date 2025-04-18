@@ -79,6 +79,10 @@ public class SliceObjects : MonoBehaviour
             slicedObjects[0].name = objectToSlice.gameObject.name + "_1";
             slicedObjects[1].name = objectToSlice.gameObject.name + "_2";
 
+            //TofuVolumeをつける
+            slicedObjects[0].AddComponent<TofuPiece>();
+            slicedObjects[1].AddComponent<TofuPiece>();
+
             Destroy(objectToSlice.gameObject);
         }
     }

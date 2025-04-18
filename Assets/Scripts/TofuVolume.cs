@@ -5,7 +5,7 @@ public class TofuPiece : MonoBehaviour
     void Start()
     {
         float volume = VolumeOfMesh(GetComponent<MeshFilter>().mesh);
-        Debug.Log("この豆腐ピースの体積：" + volume);
+        Debug.Log("Name: " + gameObject.name + ", Volume: " + volume);
     }
 
     float VolumeOfMesh(Mesh mesh)
