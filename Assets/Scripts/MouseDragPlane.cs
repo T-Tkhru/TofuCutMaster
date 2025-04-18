@@ -80,7 +80,7 @@ public class MouseDragPlane : MonoBehaviour
                         Rigidbody rb = obj.GetComponent<Rigidbody>();
                         if (rb != null)
                         {
-                            rb.isKinematic = false; // Rigidbodyを動かせるようにする
+                            rb.isKinematic = false; 
                         }
                         else
                         {
