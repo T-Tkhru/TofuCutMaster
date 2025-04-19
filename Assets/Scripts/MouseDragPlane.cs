@@ -10,7 +10,9 @@ public class MouseDragPlane : MonoBehaviour
     private bool isDragging = false; // ドラッグ中かどうか
 
     [SerializeField]
-    private LineRenderer _lineRenderer;
+    private LineRenderer lineRendererPrefab;
+    private LineRenderer currentLine;
+
     private Vector3 TofuPos; // Tofuの位置
     private int cutCount = 0; // カット回数をカウント
     private string cameraPos = "Top"; // カメラの位置
@@ -34,10 +36,6 @@ public class MouseDragPlane : MonoBehaviour
 
         cutLimitTop = CutNumManager.Instance.cutLimitTop;
         cutLimitSide = CutNumManager.Instance.cutLimitSide;
-
-        _lineRenderer.positionCount = 2;
-        _lineRenderer.enabled = false;
-        _lineRenderer.widthMultiplier = 0.02f;
     }
 
     async void Update()
@@ -47,7 +45,11 @@ public class MouseDragPlane : MonoBehaviour
         {
             isDragging = true;
             dragStartPos = GetMouseWorldPosition();
-            _lineRenderer.enabled = true;
+            GameObject lineObj = Instantiate(lineRendererPrefab.gameObject);
+            currentLine = lineObj.GetComponent<LineRenderer>();
+
+            currentLine.positionCount = 2;
+            currentLine.widthMultiplier = 0.01f;
         }
 
         // マウスが動いている間
@@ -55,8 +57,8 @@ public class MouseDragPlane : MonoBehaviour
         {
             dragEndPos = GetMouseWorldPosition();
 
-            _lineRenderer.SetPosition(0, dragStartPos+ Vector3.up * 0.01f);
-            _lineRenderer.SetPosition(1, dragEndPos + Vector3.up * 0.01f);
+            currentLine.SetPosition(0, dragStartPos+ Vector3.up * 0.01f);
+            currentLine.SetPosition(1, dragEndPos + Vector3.up * 0.01f);
         }
 
         // マウスの左ボタンが離された時
@@ -70,6 +72,7 @@ public class MouseDragPlane : MonoBehaviour
                 {
                     Debug.Log("ドラッグ距離が短いため、処理をスキップします。");
                     isDragging = false;
+                    Destroy(currentLine.gameObject); // ラインを削除
                     return;
                 }
                 CreatePlaneFromDrag(dragStartPos, dragEndPos, TofuPos);
