@@ -41,7 +41,7 @@ public class MouseDragPlane : MonoBehaviour
         _lineRenderer.widthMultiplier = 0.02f;
     }
 
-    void Update()
+    async void Update()
     {
         // マウスの左ボタンが押された時
         if (Input.GetMouseButtonDown(0))
@@ -87,7 +87,7 @@ public class MouseDragPlane : MonoBehaviour
                 else if (cameraPos == "Side" && cutCount >= cutLimitSide)
                 {
                     Debug.Log("カット回数の上限に達しました。終了します");
-                    System.Threading.Thread.Sleep(100);
+                    await Task.Delay(100); 
                     GameObject[] sliceables = GameObject.FindGameObjectsWithTag("Sliceable");
                     float[] volumeList = new float[sliceables.Length];
                     foreach (GameObject obj in sliceables)
