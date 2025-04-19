@@ -66,7 +66,7 @@ public class MouseDragPlane : MonoBehaviour
             {
                 //スタートからエンドまでの距離を計算し、短い場合は処理をスキップ
                 float distance = Vector3.Distance(dragStartPos, dragEndPos);
-                if (distance < 0.1f)
+                if (distance < 0.5f)
                 {
                     Debug.Log("ドラッグ距離が短いため、処理をスキップします。");
                     isDragging = false;
