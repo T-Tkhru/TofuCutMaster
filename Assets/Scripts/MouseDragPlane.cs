@@ -8,10 +8,15 @@ public class MouseDragPlane : MonoBehaviour
     private Vector3 dragStartPos;   // ドラッグ開始位置
     private Vector3 dragEndPos;     // ドラッグ終了位置
     private bool isDragging = false; // ドラッグ中かどうか
+
+    [SerializeField]
+    private LineRenderer _lineRenderer;
     
     private Vector3 TofuPos; // Tofuの位置
     private int cutCount = 0; // カット回数をカウント
     private string cameraPos = "Top"; // カメラの位置
+    private float cameraTopDistance = 1.75f; // カメラからTofuの面までの距離
+    private float cameraSideDistance = 1.5f; // カメラからTofuの面までの距離
     public int cutLimitTop = 4; // 上からのカット回数制限
     public int cutLimitSide = 1; // 横からのカット回数制限
 
@@ -30,25 +35,29 @@ public class MouseDragPlane : MonoBehaviour
 
         cutLimitTop = CutNumManager.Instance.cutLimitTop;
         cutLimitSide = CutNumManager.Instance.cutLimitSide;
+
+        _lineRenderer.positionCount = 2;
+        _lineRenderer.enabled = false;
+        _lineRenderer.widthMultiplier = 0.02f;
     }
 
-    async Task Update()
+    void Update()
     {
         // マウスの左ボタンが押された時
         if (Input.GetMouseButtonDown(0))
         {
             isDragging = true;
             dragStartPos = GetMouseWorldPosition();
-            // ドラッグ開始位置に点を表示
-            GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            sphere.transform.position = dragStartPos;
-            sphere.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+            _lineRenderer.enabled = true;
         }
 
         // マウスが動いている間
         if (isDragging)
         {
             dragEndPos = GetMouseWorldPosition();
+
+            _lineRenderer.SetPosition(0, dragStartPos);
+            _lineRenderer.SetPosition(1, dragEndPos);
         }
 
         // マウスの左ボタンが離された時
@@ -56,9 +65,6 @@ public class MouseDragPlane : MonoBehaviour
         {
             if (isDragging)
             {
-                GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                sphere.transform.position = dragEndPos;
-                sphere.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
                 //スタートからエンドまでの距離を計算し、短い場合は処理をスキップ
                 float distance = Vector3.Distance(dragStartPos, dragEndPos);
                 if (distance < 0.1f)
@@ -81,7 +87,7 @@ public class MouseDragPlane : MonoBehaviour
                 else if (cameraPos == "Side" && cutCount >= cutLimitSide)
                 {
                     Debug.Log("カット回数の上限に達しました。終了します");
-                    await Task.Delay(100);
+                    System.Threading.Thread.Sleep(100);
                     GameObject[] sliceables = GameObject.FindGameObjectsWithTag("Sliceable");
                     float[] volumeList = new float[sliceables.Length];
                     foreach (GameObject obj in sliceables)
@@ -123,11 +129,11 @@ public class MouseDragPlane : MonoBehaviour
         Vector3 mousePosition = Input.mousePosition;
         if (cameraPos == "Top")
         {
-            mousePosition.z = 1.75f;  // カメラからTofuの面までの距離
+            mousePosition.z = cameraTopDistance;  // カメラからTofuの面までの距離
         }
         else if (cameraPos == "Side")
         {
-            mousePosition.z = 1.5f;  // カメラからTofuの面までの距離
+            mousePosition.z = cameraSideDistance;  // カメラからTofuの面までの距離
         }
         return Camera.main.ScreenToWorldPoint(mousePosition);
     }
@@ -165,7 +171,7 @@ public class MouseDragPlane : MonoBehaviour
     // カメラを移動する関数
     void MoveCamera()
     {
-        Camera.main.transform.position = new Vector3(8, 6, -2); // カメラを上方向に移動
+        Camera.main.transform.position = new Vector3(8, 2, 0); // カメラを上方向に移動
         Camera.main.transform.rotation = Quaternion.Euler(0, 0, 0); // カメラの向きを上に向ける
         Debug.Log("カメラが移動しました");
     }
