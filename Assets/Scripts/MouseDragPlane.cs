@@ -97,10 +97,10 @@ public class MouseDragPlane : MonoBehaviour
                             Debug.LogWarning("Rigidbodyが見つかりません: " + obj.name);
                         }
                         // TofuPieceスクリプトを取得し、体積を計算
-                        TofuPiece tofuPiece = obj.GetComponent<TofuPiece>();
+                        TofuVolume tofuPiece = obj.GetComponent<TofuVolume>();
                         if (tofuPiece != null)
                         {
-                            float volume = tofuPiece.VolumeOfMesh(obj.GetComponent<MeshFilter>().mesh);
+                            float volume = tofuPiece.VolumeOfMesh(obj.GetComponent<MeshFilter>().mesh, obj.transform);
                             volumeList[System.Array.IndexOf(sliceables, obj)] = volume;
                         }
                         else
@@ -165,7 +165,7 @@ public class MouseDragPlane : MonoBehaviour
     // カメラを移動する関数
     void MoveCamera()
     {
-        Camera.main.transform.position = new Vector3(8, 2, 0); // カメラを上方向に移動
+        Camera.main.transform.position = new Vector3(8, 6, -2); // カメラを上方向に移動
         Camera.main.transform.rotation = Quaternion.Euler(0, 0, 0); // カメラの向きを上に向ける
         Debug.Log("カメラが移動しました");
     }
