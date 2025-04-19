@@ -669,15 +669,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -3910990755373119420, guid: 143a82e89c0b9dc4f8ed0e097e2e50e5, type: 3}
       propertyPath: m_LocalScale.x
-      value: 23
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: -3910990755373119420, guid: 143a82e89c0b9dc4f8ed0e097e2e50e5, type: 3}
       propertyPath: m_LocalScale.y
-      value: 23
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: -3910990755373119420, guid: 143a82e89c0b9dc4f8ed0e097e2e50e5, type: 3}
       propertyPath: m_LocalScale.z
-      value: 23
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: -3910990755373119420, guid: 143a82e89c0b9dc4f8ed0e097e2e50e5, type: 3}
       propertyPath: m_LocalPosition.x
@@ -725,7 +725,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8771091787928289351, guid: 143a82e89c0b9dc4f8ed0e097e2e50e5, type: 3}
       propertyPath: m_Name
-      value: "330_\u6C41\u6900"
+      value: Bowl
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1036,7 +1036,7 @@ MeshCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30
