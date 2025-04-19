@@ -11,7 +11,6 @@ public class MouseDragPlane : MonoBehaviour
 
     [SerializeField]
     private LineRenderer _lineRenderer;
-    
     private Vector3 TofuPos; // Tofuの位置
     private int cutCount = 0; // カット回数をカウント
     private string cameraPos = "Top"; // カメラの位置
@@ -56,8 +55,8 @@ public class MouseDragPlane : MonoBehaviour
         {
             dragEndPos = GetMouseWorldPosition();
 
-            _lineRenderer.SetPosition(0, dragStartPos+ Vector3.up * 0.01f); 
-            _lineRenderer.SetPosition(1, dragEndPos + Vector3.up * 0.01f); 
+            _lineRenderer.SetPosition(0, dragStartPos+ Vector3.up * 0.01f);
+            _lineRenderer.SetPosition(1, dragEndPos + Vector3.up * 0.01f);
         }
 
         // マウスの左ボタンが離された時
@@ -87,7 +86,7 @@ public class MouseDragPlane : MonoBehaviour
                 else if (cameraPos == "Side" && cutCount >= cutLimitSide)
                 {
                     Debug.Log("カット回数の上限に達しました。終了します");
-                    await Task.Delay(100); 
+                    await Task.Delay(100);
                     GameObject[] sliceables = GameObject.FindGameObjectsWithTag("Sliceable");
                     float[] volumeList = new float[sliceables.Length];
                     foreach (GameObject obj in sliceables)
