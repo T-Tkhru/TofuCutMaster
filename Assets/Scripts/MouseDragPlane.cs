@@ -15,7 +15,7 @@ public class MouseDragPlane : MonoBehaviour
     private Vector3 TofuPos; // Tofuの位置
     private int cutCount = 0; // カット回数をカウント
     private string cameraPos = "Top"; // カメラの位置
-    private float cameraTopDistance = 1.75f; // カメラからTofuの面までの距離
+    private float cameraTopDistance = 1.25f; // カメラからTofuの面までの距離
     private float cameraSideDistance = 1.5f; // カメラからTofuの面までの距離
     public int cutLimitTop = 4; // 上からのカット回数制限
     public int cutLimitSide = 1; // 横からのカット回数制限
@@ -56,8 +56,8 @@ public class MouseDragPlane : MonoBehaviour
         {
             dragEndPos = GetMouseWorldPosition();
 
-            _lineRenderer.SetPosition(0, dragStartPos);
-            _lineRenderer.SetPosition(1, dragEndPos);
+            _lineRenderer.SetPosition(0, dragStartPos+ Vector3.up * 0.01f); 
+            _lineRenderer.SetPosition(1, dragEndPos + Vector3.up * 0.01f); 
         }
 
         // マウスの左ボタンが離された時
