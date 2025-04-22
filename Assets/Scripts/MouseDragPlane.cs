@@ -49,7 +49,6 @@ public class MouseDragPlane : MonoBehaviour
             dragStartPos = GetMouseWorldPosition();
             GameObject lineObj = Instantiate(lineRendererPrefab.gameObject);
             currentLine = lineObj.GetComponent<LineRenderer>();
-            lines.Add(currentLine);
 
             currentLine.positionCount = 2;
             currentLine.widthMultiplier = 0.01f;
@@ -73,7 +72,7 @@ public class MouseDragPlane : MonoBehaviour
             {
                 //スタートからエンドまでの距離を計算し、短い場合は処理をスキップ
                 float distance = Vector3.Distance(dragStartPos, dragEndPos);
-                if (distance < 0.5f)
+                if (distance < 0.7f)
                 {
                     Debug.Log("ドラッグ距離が短いため、処理をスキップします。");
                     isDragging = false;
@@ -83,7 +82,7 @@ public class MouseDragPlane : MonoBehaviour
                 CreatePlaneFromDrag(dragStartPos, dragEndPos, TofuPos);
                 isDragging = false;
                 currentLine.gameObject.SetActive(true);
-                Debug.Log("ラインリスト: " + lines.Count);
+                lines.Add(currentLine);
 
                 // カット回数をカウント
                 cutCount++;
