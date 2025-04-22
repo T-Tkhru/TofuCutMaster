@@ -2,11 +2,11 @@ using UnityEngine;
 
 public class TofuVolume : MonoBehaviour
 {
-    void Start()
-    {
-        float volume = VolumeOfMesh(GetComponent<MeshFilter>().mesh, transform);
-        Debug.Log("Name: " + gameObject.name + ", Volume: " + volume);
-    }
+    // void Start()
+    // {
+    //     float volume = VolumeOfMesh(GetComponent<MeshFilter>().mesh, transform);
+
+    // }
 
     public float VolumeOfMesh(Mesh mesh, Transform meshTransform)
     {

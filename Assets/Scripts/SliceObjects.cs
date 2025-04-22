@@ -41,7 +41,6 @@ public class SliceObjects : MonoBehaviour
 
         Collider[] objectsToSlice = Physics.OverlapBox(transform.position, overlapBoxSize, transform.rotation, sliceMask, QueryTriggerInteraction.Ignore);
 
-        Debug.Log("検出されたオブジェクト数: " + objectsToSlice.Length);
 
         if (objectsToSlice.Length == 0)
         {
@@ -57,7 +56,6 @@ public class SliceObjects : MonoBehaviour
                 continue;
             }
 
-            Debug.Log("切断対象: " + objectToSlice.gameObject.name);
 
             GameObject[] slicedObjects = objectToSlice.gameObject.SliceInstantiate(transform.position, transform.up, MaterialAfterSlice);
 
