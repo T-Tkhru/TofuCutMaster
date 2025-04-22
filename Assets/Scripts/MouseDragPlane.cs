@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using UnityEngine;
 using System.Linq;
+using System.Collections.Generic;
 
 public class MouseDragPlane : MonoBehaviour
 {
@@ -12,6 +13,7 @@ public class MouseDragPlane : MonoBehaviour
     [SerializeField]
     private LineRenderer lineRendererPrefab;
     private LineRenderer currentLine;
+    private List<LineRenderer> lines = new List<LineRenderer>();
 
     private Vector3 TofuPos; // Tofuの位置
     private int cutCount = 0; // カット回数をカウント
@@ -47,9 +49,12 @@ public class MouseDragPlane : MonoBehaviour
             dragStartPos = GetMouseWorldPosition();
             GameObject lineObj = Instantiate(lineRendererPrefab.gameObject);
             currentLine = lineObj.GetComponent<LineRenderer>();
+            lines.Add(currentLine);
 
             currentLine.positionCount = 2;
             currentLine.widthMultiplier = 0.01f;
+            //非アクティブ
+            currentLine.gameObject.SetActive(false);
         }
 
         // マウスが動いている間
@@ -77,19 +82,30 @@ public class MouseDragPlane : MonoBehaviour
                 }
                 CreatePlaneFromDrag(dragStartPos, dragEndPos, TofuPos);
                 isDragging = false;
+                currentLine.gameObject.SetActive(true);
+                Debug.Log("ラインリスト: " + lines.Count);
 
                 // カット回数をカウント
                 cutCount++;
                 if (cameraPos == "Top" && cutCount >= cutLimitTop)
                 {
                     MoveCamera();
-                    cameraPos = "Side"; // カメラの位置を横に変更
-                    cutCount = 0; // カット回数をリセット
+                    cameraPos = "Side";
+                    cutCount = 0;
+                    foreach (LineRenderer line in lines)
+                    {
+                        line.gameObject.SetActive(false); // ラインを非アクティブにする
+                    }
+
                 }
                 else if (cameraPos == "Side" && cutCount >= cutLimitSide)
                 {
                     Debug.Log("カット回数の上限に達しました。終了します");
                     await Task.Delay(100);
+                    foreach (LineRenderer line in lines)
+                    {
+                        line.gameObject.SetActive(false); // ラインを非アクティブにする
+                    }
                     GameObject[] sliceables = GameObject.FindGameObjectsWithTag("Sliceable");
                     float[] volumeList = new float[sliceables.Length];
                     foreach (GameObject obj in sliceables)
