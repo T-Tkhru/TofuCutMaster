@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Linq;
 using System.Collections.Generic;
 
-public class MouseDragPlane : MonoBehaviour
+public class GameControl : MonoBehaviour
 {
     public GameObject planePrefab;  // 平面のプレハブ
     private Vector3 dragStartPos;   // ドラッグ開始位置
