@@ -92,7 +92,7 @@ public class GameControl : MonoBehaviour
             {
                 //スタートからエンドまでの距離を計算し、短い場合は処理をスキップ
                 float distance = Vector3.Distance(dragStartPos, dragEndPos);
-                if (distance < 0.7f)
+                if (distance < 0.8f)
                 {
                     Debug.Log("ドラッグ距離が短いため、処理をスキップします。");
                     isDragging = false;
