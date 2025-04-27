@@ -3,10 +3,7 @@ using UnityEngine;
 using System.Linq;
 using System.Collections.Generic;
 using unityroom.Api;
-using System.Threading;
-using Unity.VisualScripting;
 using System;
-using UnityEngine.InputSystem;
 
 public class GameControl : MonoBehaviour
 {
@@ -18,7 +15,8 @@ public class GameControl : MonoBehaviour
     [SerializeField]
     private LineRenderer lineRendererPrefab;
     private LineRenderer currentLine;
-    private List<LineRenderer> lines = new List<LineRenderer>();
+    private List<LineRenderer> topLines = new List<LineRenderer>();
+    private List<LineRenderer> sideLines = new List<LineRenderer>();
 
     private Vector3 TofuPos; // Tofuの位置
     private int cutCount = 0; // カット回数をカウント
@@ -100,11 +98,17 @@ public class GameControl : MonoBehaviour
                 }
                 isDragging = false;
                 currentLine.gameObject.SetActive(true);
-                lines.Add(currentLine);
+                if (cameraPos == "Top")
+                {
+                    topLines.Add(currentLine); // 上からのカットラインを保存
+                }
+                else if (cameraPos == "Side")
+                {
+                    sideLines.Add(currentLine); // 横からのカットラインを保存
+                }
 
                 // カット回数をカウント
                 cutCount++;
-
             }
         }
         //スペースキー押下時にカメラを移動
@@ -112,9 +116,13 @@ public class GameControl : MonoBehaviour
         {
             MoveCamera(cameraPos);
             cameraPos = "Side";
-            foreach (LineRenderer line in lines)
+            foreach (LineRenderer line in topLines)
             {
                 line.gameObject.SetActive(false); // ラインを非アクティブにする
+            }
+            foreach (LineRenderer line in sideLines)
+            {
+                line.gameObject.SetActive(true); // ラインをアクティブにする
             }
 
         }
@@ -122,15 +130,23 @@ public class GameControl : MonoBehaviour
         {
             MoveCamera(cameraPos);
             cameraPos = "Top";
-            foreach (LineRenderer line in lines)
+            foreach (LineRenderer line in sideLines)
             {
                 line.gameObject.SetActive(false); // ラインを非アクティブにする
+            }
+            foreach (LineRenderer line in topLines)
+            {
+                line.gameObject.SetActive(true); // ラインをアクティブにする
             }
         }
         if (Input.GetKeyDown(KeyCode.Return)){
             Debug.Log("終了します");
             await Task.Delay(100);
-            foreach (LineRenderer line in lines)
+            foreach (LineRenderer line in topLines)
+            {
+                line.gameObject.SetActive(false); // ラインを非アクティブにする
+            }
+            foreach (LineRenderer line in sideLines)
             {
                 line.gameObject.SetActive(false); // ラインを非アクティブにする
             }
@@ -239,7 +255,7 @@ public class GameControl : MonoBehaviour
         float variance = volumeList.Sum(v => Mathf.Pow(v - average, 2)) / volumeList.Length;
         float standardDeviation = Mathf.Sqrt(variance);
         Debug.Log("標準偏差: " + standardDeviation * 1000);
-        float score = (50 - Math.Abs(18 - volumeList.Length) * 5) + (25 - standardDeviation * 1000) + (20 - Mathf.Pow(playTime, 2) / 5) + (20 - 5 * 2);//5*2はカット回数*2やからあとでカット回数取得できるよう調整
+        float score = MathF.Max(50 - Math.Abs(18 - volumeList.Length) * 5, 0) + MathF.Max(25 - standardDeviation * 1000, 0) + MathF.Max(20 - Mathf.Pow(playTime, 2) / 5, 0) + MathF.Max(20 - cutCount * 2, 0);//5*2はカット回数*2やからあとでカット回数取得できるよう調整
         Debug.Log("スコア: " + score);
         if (score >= 100)
         {
