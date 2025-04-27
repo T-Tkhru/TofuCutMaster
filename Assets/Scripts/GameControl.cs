@@ -4,6 +4,8 @@ using System.Linq;
 using System.Collections.Generic;
 using unityroom.Api;
 using System;
+using System.Collections;
+using UnityEngine.UI;
 
 public class GameControl : MonoBehaviour
 {
@@ -30,8 +32,13 @@ public class GameControl : MonoBehaviour
     private float playTime;
     private int cutSuccessFlag;
 
+    private bool result = false; // 結果表示フラグ
     public GameObject ControlUI;
     public GameObject ResultUI; // 結果表示用のUIオブジェクト
+    [SerializeField]
+    private List<GameObject> resultTexts; // 表示したいテキストのリスト
+    private int resultCount;
+    private float resultScore;
     void Start()
     {
         // Tofuの位置を取得
@@ -54,6 +61,7 @@ public class GameControl : MonoBehaviour
 
     async void Update()
     {
+        if (result) return; // 結果表示中は処理をスキップ
         // マウスの左ボタンが押された時
         if (Input.GetMouseButtonDown(0))
         {
@@ -144,6 +152,7 @@ public class GameControl : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.Return))
         {
+            result = true; // 結果表示フラグを立てる
             Debug.Log("終了します");
             ControlUI.SetActive(false); // UIを非アクティブにする
             Camera.main.transform.position = new Vector3(8, 2, 0.4f);
@@ -158,12 +167,14 @@ public class GameControl : MonoBehaviour
                 line.gameObject.SetActive(false); // ラインを非アクティブにする
             }
             Result(); // 結果を表示する関数を呼び出す
-            await Task.Delay(1000);
+            await Task.Delay(2000);
             ResultUI.SetActive(true); // 結果表示用のUIをアクティブにする
+            await Task.Delay(1000);
+            StartCoroutine(ShowResults());
         }
     }
 
-    
+
     // スクリーン座標をワールド座標に変換するヘルパー関数
     Vector3 GetMouseWorldPosition()
     {
@@ -205,7 +216,7 @@ public class GameControl : MonoBehaviour
         {
             newPlane.transform.Rotate(0, 0, 90);
         }
-        cutSuccessFlag= newPlane.GetComponent<SliceObjects>().Cutting();
+        cutSuccessFlag = newPlane.GetComponent<SliceObjects>().Cutting();
         Destroy(newPlane, 0.01f);
     }
 
@@ -214,18 +225,18 @@ public class GameControl : MonoBehaviour
     {
         if (cameraPos == "Top")
         {
-            Camera.main.transform.position = cameraPosSide; 
+            Camera.main.transform.position = cameraPosSide;
             Camera.main.transform.rotation = Quaternion.Euler(0, 0, 0); // カメラの向きを上に向ける
             Debug.Log("カメラが移動しました");
         }
         else if (cameraPos == "Side")
         {
-            Camera.main.transform.position = cameraPosTop; 
+            Camera.main.transform.position = cameraPosTop;
             Camera.main.transform.rotation = Quaternion.Euler(90, 0, 0); // カメラの向きを横に向ける
             Debug.Log("カメラが移動しました");
         }
     }
-        
+
 
     void Result()
     {
@@ -264,9 +275,12 @@ public class GameControl : MonoBehaviour
         float variance = volumeList.Sum(v => Mathf.Pow(v - average, 2)) / volumeList.Length;
         float standardDeviation = Mathf.Sqrt(variance);
         Debug.Log("標準偏差: " + standardDeviation * 1000);
-        float score = MathF.Max(50 - Math.Abs(18 - volumeList.Length) * 5, 0) + MathF.Max(25 - standardDeviation * 1000, 0) + MathF.Max(20 - Mathf.Pow(playTime, 2) / 5, 0) + MathF.Max(20 - cutCount * 2, 0);//5*2はカット回数*2やからあとでカット回数取得できるよう調整
-        Debug.Log("スコア: " + score);
-        if (score >= 100)
+        //スコアを計算
+        resultCount = volumeList.Length;
+        resultScore = MathF.Max(50 - Math.Abs(18 - volumeList.Length) * 5, 0) + MathF.Max(25 - standardDeviation * 1000, 0) + MathF.Max(20 - Mathf.Pow(playTime, 2) / 5, 0) + MathF.Max(20 - cutCount * 2, 0);
+        Debug.Log("スコア: " + resultScore);
+
+        if (resultScore >= 100)
         {
             Debug.Log("スコアが100以上です");
             UnityroomApiClient.Instance.SendScore(1, 100.00f, ScoreboardWriteMode.HighScoreDesc);
@@ -275,7 +289,27 @@ public class GameControl : MonoBehaviour
         else
         {
             Debug.Log("スコアが100未満です");
-            UnityroomApiClient.Instance.SendScore(1, score, ScoreboardWriteMode.HighScoreDesc);
+            UnityroomApiClient.Instance.SendScore(1, resultScore, ScoreboardWriteMode.HighScoreDesc);
+        }
+    }
+    private IEnumerator ShowResults()
+    {
+    //スコアを表示
+        // 個数用
+        var countText = resultTexts[0].GetComponent<TMPro.TMP_Text>();
+        if (countText != null) countText.text = $"個数: {resultCount}個";
+
+        // 秒数用
+        var timeText = resultTexts[1].GetComponent<TMPro.TMP_Text>();
+        if (timeText != null) timeText.text = $"タイム: {playTime:F2}秒";
+
+        // スコア用
+        var scoreText = resultTexts[2].GetComponent<TMPro.TMP_Text>();
+        if (scoreText != null) scoreText.text = $"スコア: {resultScore:F2}点";
+    foreach (GameObject textObj in resultTexts)
+        {
+            textObj.SetActive(true);
+            yield return new WaitForSeconds(0.8f);
         }
     }
 }
