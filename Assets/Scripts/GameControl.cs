@@ -6,6 +6,7 @@ using unityroom.Api;
 using System.Threading;
 using Unity.VisualScripting;
 using System;
+using UnityEngine.InputSystem;
 
 public class GameControl : MonoBehaviour
 {
@@ -22,6 +23,8 @@ public class GameControl : MonoBehaviour
     private Vector3 TofuPos; // Tofuの位置
     private int cutCount = 0; // カット回数をカウント
     private string cameraPos = "Top"; // カメラの位置
+    private Vector3 cameraPosSide = new Vector3(8, 2, 0); // カメラの位置（上から）
+    private Vector3 cameraPosTop = new Vector3(8, 3.5f, 2); // カメラの位置（横から）
     private float cameraTopDistance = 1.25f; // カメラからTofuの面までの距離
     private float cameraSideDistance = 1.5f; // カメラからTofuの面までの距離
     public int cutLimitTop = 4; // 上からのカット回数制限
@@ -101,28 +104,37 @@ public class GameControl : MonoBehaviour
 
                 // カット回数をカウント
                 cutCount++;
-                if (cameraPos == "Top" && cutCount >= cutLimitTop)
-                {
-                    MoveCamera();
-                    cameraPos = "Side";
-                    cutCount = 0;
-                    foreach (LineRenderer line in lines)
-                    {
-                        line.gameObject.SetActive(false); // ラインを非アクティブにする
-                    }
 
-                }
-                else if (cameraPos == "Side" && cutCount >= cutLimitSide)
-                {
-                    Debug.Log("カット回数の上限に達しました。終了します");
-                    await Task.Delay(100);
-                    foreach (LineRenderer line in lines)
-                    {
-                        line.gameObject.SetActive(false); // ラインを非アクティブにする
-                    }
-                    Result(); // 結果を表示する関数を呼び出す
-                }
             }
+        }
+        //スペースキー押下時にカメラを移動
+        if (cameraPos == "Top" && Input.GetKeyDown(KeyCode.Space))
+        {
+            MoveCamera(cameraPos);
+            cameraPos = "Side";
+            foreach (LineRenderer line in lines)
+            {
+                line.gameObject.SetActive(false); // ラインを非アクティブにする
+            }
+
+        }
+        else if (cameraPos == "Side" && Input.GetKeyDown(KeyCode.Space))
+        {
+            MoveCamera(cameraPos);
+            cameraPos = "Top";
+            foreach (LineRenderer line in lines)
+            {
+                line.gameObject.SetActive(false); // ラインを非アクティブにする
+            }
+        }
+        if (Input.GetKeyDown(KeyCode.Return)){
+            Debug.Log("終了します");
+            await Task.Delay(100);
+            foreach (LineRenderer line in lines)
+            {
+                line.gameObject.SetActive(false); // ラインを非アクティブにする
+            }
+            Result(); // 結果を表示する関数を呼び出す
         }
     }
 
@@ -173,12 +185,22 @@ public class GameControl : MonoBehaviour
     }
 
     // カメラを移動する関数
-    void MoveCamera()
+    void MoveCamera(string cameraPos)
     {
-        Camera.main.transform.position = new Vector3(8, 2, 0); // カメラを上方向に移動
-        Camera.main.transform.rotation = Quaternion.Euler(0, 0, 0); // カメラの向きを上に向ける
-        Debug.Log("カメラが移動しました");
+        if (cameraPos == "Top")
+        {
+            Camera.main.transform.position = cameraPosSide; 
+            Camera.main.transform.rotation = Quaternion.Euler(0, 0, 0); // カメラの向きを上に向ける
+            Debug.Log("カメラが移動しました");
+        }
+        else if (cameraPos == "Side")
+        {
+            Camera.main.transform.position = cameraPosTop; 
+            Camera.main.transform.rotation = Quaternion.Euler(90, 0, 0); // カメラの向きを横に向ける
+            Debug.Log("カメラが移動しました");
+        }
     }
+        
 
     void Result()
     {
