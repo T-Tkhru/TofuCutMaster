@@ -1,7 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using EzySlice; // Ezy-Slice フレームワークを利用するために必要
+using EzySlice;
+using System.Runtime.InteropServices.WindowsRuntime; // Ezy-Slice フレームワークを利用するために必要
 
 public class SliceObjects : MonoBehaviour
 {
@@ -34,7 +35,7 @@ public class SliceObjects : MonoBehaviour
         obj.tag = "Sliceable"; // Sliceableタグを適用
     }
 
-    public void Cutting()
+    public int Cutting()
     {
         // Planeのサイズを取得 (scaleが1,1,1の状態であればそのまま)
         Vector3 planeScale = transform.localScale;
@@ -45,7 +46,7 @@ public class SliceObjects : MonoBehaviour
         if (objectsToSlice.Length == 0)
         {
             Debug.LogWarning("OverlapBox にオブジェクトが検出されませんでした。");
-            return;
+            return 1;
         }
 
         foreach (Collider objectToSlice in objectsToSlice)
@@ -83,5 +84,8 @@ public class SliceObjects : MonoBehaviour
 
             Destroy(objectToSlice.gameObject);
         }
+        return 0;
+
     }
+
 }

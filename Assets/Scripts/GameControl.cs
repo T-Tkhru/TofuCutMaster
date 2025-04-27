@@ -3,6 +3,9 @@ using UnityEngine;
 using System.Linq;
 using System.Collections.Generic;
 using unityroom.Api;
+using System.Threading;
+using Unity.VisualScripting;
+using System;
 
 public class GameControl : MonoBehaviour
 {
@@ -23,7 +26,8 @@ public class GameControl : MonoBehaviour
     private float cameraSideDistance = 1.5f; // カメラからTofuの面までの距離
     public int cutLimitTop = 4; // 上からのカット回数制限
     public int cutLimitSide = 1; // 横からのカット回数制限
-
+    private float playTime;
+    private int cutSuccessFlag;
     void Start()
     {
         // Tofuの位置を取得
@@ -39,6 +43,9 @@ public class GameControl : MonoBehaviour
 
         cutLimitTop = CutNumManager.Instance.cutLimitTop;
         cutLimitSide = CutNumManager.Instance.cutLimitSide;
+
+
+
     }
 
     async void Update()
@@ -81,6 +88,13 @@ public class GameControl : MonoBehaviour
                     return;
                 }
                 CreatePlaneFromDrag(dragStartPos, dragEndPos, TofuPos);
+                if (cutSuccessFlag == 1)
+                {
+                    Debug.Log("カット失敗");
+                    isDragging = false;
+                    Destroy(currentLine.gameObject); // ラインを削除
+                    return;
+                }
                 isDragging = false;
                 currentLine.gameObject.SetActive(true);
                 lines.Add(currentLine);
@@ -112,6 +126,7 @@ public class GameControl : MonoBehaviour
         }
     }
 
+    
     // スクリーン座標をワールド座標に変換するヘルパー関数
     Vector3 GetMouseWorldPosition()
     {
@@ -153,7 +168,7 @@ public class GameControl : MonoBehaviour
         {
             newPlane.transform.Rotate(0, 0, 90);
         }
-        newPlane.GetComponent<SliceObjects>().Invoke(nameof(SliceObjects.Cutting), 0.01f);
+        cutSuccessFlag= newPlane.GetComponent<SliceObjects>().Cutting();
         Destroy(newPlane, 0.01f);
     }
 
@@ -167,6 +182,8 @@ public class GameControl : MonoBehaviour
 
     void Result()
     {
+        playTime = Time.time;
+        Debug.Log("プレイ時間: " + playTime + "秒");
         GameObject[] sliceables = GameObject.FindGameObjectsWithTag("Sliceable");
         float[] volumeList = new float[sliceables.Length];
         foreach (GameObject obj in sliceables)
@@ -194,8 +211,15 @@ public class GameControl : MonoBehaviour
             }
         }
         Debug.Log("VolumeList: " + string.Join(", ", volumeList));
+        Debug.Log("個数: " + volumeList.Length);
         Debug.Log("Total Volume: " + volumeList.Sum());
         Debug.Log("最小値: " + volumeList.Min());
         Debug.Log("最大値: " + volumeList.Max());
+        //分散を計算
+        float average = volumeList.Average();
+        float variance = volumeList.Sum(v => Mathf.Pow(v - average, 2)) / volumeList.Length;
+        Debug.Log("分散: " + variance * 10000);
+        float score = (50 - Math.Abs(18 - volumeList.Length) * 5) + (25 - playTime) + (20 - 5*2);//5*2はカット回数*2やからあとでカット回数取得できるよう調整
+        Debug.Log("スコア: " + score);
     }
 }
