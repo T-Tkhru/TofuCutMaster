@@ -29,6 +29,9 @@ public class GameControl : MonoBehaviour
     public int cutLimitSide = 1; // 横からのカット回数制限
     private float playTime;
     private int cutSuccessFlag;
+
+    public GameObject ControlUI;
+    public GameObject ResultUI; // 結果表示用のUIオブジェクト
     void Start()
     {
         // Tofuの位置を取得
@@ -139,9 +142,13 @@ public class GameControl : MonoBehaviour
                 line.gameObject.SetActive(true); // ラインをアクティブにする
             }
         }
-        if (Input.GetKeyDown(KeyCode.Return)){
+        if (Input.GetKeyDown(KeyCode.Return))
+        {
             Debug.Log("終了します");
-            await Task.Delay(100);
+            ControlUI.SetActive(false); // UIを非アクティブにする
+            Camera.main.transform.position = new Vector3(8, 2, 0.4f);
+            Camera.main.transform.rotation = Quaternion.Euler(40, 0, 0); // カメラの向きを上に向ける
+            await Task.Delay(1000);
             foreach (LineRenderer line in topLines)
             {
                 line.gameObject.SetActive(false); // ラインを非アクティブにする
@@ -151,6 +158,8 @@ public class GameControl : MonoBehaviour
                 line.gameObject.SetActive(false); // ラインを非アクティブにする
             }
             Result(); // 結果を表示する関数を呼び出す
+            await Task.Delay(1000);
+            ResultUI.SetActive(true); // 結果表示用のUIをアクティブにする
         }
     }
 
