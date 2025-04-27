@@ -29,7 +29,8 @@ public class GameControl : MonoBehaviour
     private float cameraSideDistance = 1.5f; // カメラからTofuの面までの距離
     public int cutLimitTop = 4; // 上からのカット回数制限
     public int cutLimitSide = 1; // 横からのカット回数制限
-    private float playTime;
+    private float startTime;
+    private float playTime; // プレイ時間
     private int cutSuccessFlag;
 
     private bool result = false; // 結果表示フラグ
@@ -54,6 +55,8 @@ public class GameControl : MonoBehaviour
 
         cutLimitTop = CutNumManager.Instance.cutLimitTop;
         cutLimitSide = CutNumManager.Instance.cutLimitSide;
+
+        startTime = Time.time; // ゲーム開始時刻を記録
 
 
 
@@ -240,7 +243,7 @@ public class GameControl : MonoBehaviour
 
     void Result()
     {
-        playTime = Time.time;
+        playTime = Time.time - startTime; // プレイ時間を計算
         Debug.Log("プレイ時間: " + playTime + "秒");
         GameObject[] sliceables = GameObject.FindGameObjectsWithTag("Sliceable");
         float[] volumeList = new float[sliceables.Length];
