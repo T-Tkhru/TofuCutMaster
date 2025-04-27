@@ -212,14 +212,23 @@ public class GameControl : MonoBehaviour
         }
         Debug.Log("VolumeList: " + string.Join(", ", volumeList));
         Debug.Log("個数: " + volumeList.Length);
-        Debug.Log("Total Volume: " + volumeList.Sum());
-        Debug.Log("最小値: " + volumeList.Min());
-        Debug.Log("最大値: " + volumeList.Max());
-        //分散を計算
+        //標準偏差を計算
         float average = volumeList.Average();
         float variance = volumeList.Sum(v => Mathf.Pow(v - average, 2)) / volumeList.Length;
-        Debug.Log("分散: " + variance * 10000);
-        float score = (50 - Math.Abs(18 - volumeList.Length) * 5) + (25 - playTime) + (20 - 5*2);//5*2はカット回数*2やからあとでカット回数取得できるよう調整
+        float standardDeviation = Mathf.Sqrt(variance);
+        Debug.Log("標準偏差: " + standardDeviation * 1000);
+        float score = (50 - Math.Abs(18 - volumeList.Length) * 5) + (25 - standardDeviation * 1000) + (20 - Mathf.Pow(playTime, 2) / 5) + (20 - 5 * 2);//5*2はカット回数*2やからあとでカット回数取得できるよう調整
         Debug.Log("スコア: " + score);
+        if (score >= 100)
+        {
+            Debug.Log("スコアが100以上です");
+            UnityroomApiClient.Instance.SendScore(1, 100.00f, ScoreboardWriteMode.HighScoreDesc);
+            UnityroomApiClient.Instance.SendScore(2, playTime, ScoreboardWriteMode.HighScoreAsc);
+        }
+        else
+        {
+            Debug.Log("スコアが100未満です");
+            UnityroomApiClient.Instance.SendScore(1, score, ScoreboardWriteMode.HighScoreDesc);
+        }
     }
 }
