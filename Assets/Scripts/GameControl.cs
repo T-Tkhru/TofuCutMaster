@@ -62,7 +62,7 @@ public class GameControl : MonoBehaviour
         {
             dragEndPos = GetMouseWorldPosition();
 
-            currentLine.SetPosition(0, dragStartPos+ Vector3.up * 0.01f);
+            currentLine.SetPosition(0, dragStartPos + Vector3.up * 0.01f);
             currentLine.SetPosition(1, dragEndPos + Vector3.up * 0.01f);
         }
 
@@ -106,36 +106,7 @@ public class GameControl : MonoBehaviour
                     {
                         line.gameObject.SetActive(false); // ラインを非アクティブにする
                     }
-                    GameObject[] sliceables = GameObject.FindGameObjectsWithTag("Sliceable");
-                    float[] volumeList = new float[sliceables.Length];
-                    foreach (GameObject obj in sliceables)
-                    {
-                        //Rigidbodyを取得し、kinematicをfalseに設定
-                        Rigidbody rb = obj.GetComponent<Rigidbody>();
-                        if (rb != null)
-                        {
-                            rb.isKinematic = false;
-                        }
-                        else
-                        {
-                            Debug.LogWarning("Rigidbodyが見つかりません: " + obj.name);
-                        }
-                        // TofuPieceスクリプトを取得し、体積を計算
-                        TofuVolume tofuPiece = obj.GetComponent<TofuVolume>();
-                        if (tofuPiece != null)
-                        {
-                            float volume = tofuPiece.VolumeOfMesh(obj.GetComponent<MeshFilter>().mesh, obj.transform);
-                            volumeList[System.Array.IndexOf(sliceables, obj)] = volume;
-                        }
-                        else
-                        {
-                            Debug.LogWarning("TofuPieceスクリプトが見つかりません: " + obj.name);
-                        }
-                    }
-                    Debug.Log("VolumeList: " + string.Join(", ", volumeList));
-                    Debug.Log("Total Volume: " + volumeList.Sum());
-                    Debug.Log("最小値: " + volumeList.Min());
-                    Debug.Log("最大値: " + volumeList.Max());
+                    Result(); // 結果を表示する関数を呼び出す
                 }
             }
         }
@@ -162,13 +133,13 @@ public class GameControl : MonoBehaviour
         Vector3 centerPos = (startPos + endPos) / 2; // ドラッグの中心位置
         if (cameraPos == "Top")
         {
-            centerPos.y = cubeCenterPos.y; 
+            centerPos.y = cubeCenterPos.y;
         }
         else if (cameraPos == "Side")
         {
-            centerPos.z = cubeCenterPos.z; 
+            centerPos.z = cubeCenterPos.z;
         }
-        
+
         Vector3 scale = new Vector3(0.2f, 0.1f, 0.2f);  // スケール
 
         GameObject newPlane = Instantiate(planePrefab, centerPos, Quaternion.identity);
@@ -180,10 +151,10 @@ public class GameControl : MonoBehaviour
         newPlane.transform.rotation = rotation;
         if (cameraPos == "Top")
         {
-            newPlane.transform.Rotate(0, 0, 90); 
+            newPlane.transform.Rotate(0, 0, 90);
         }
         newPlane.GetComponent<SliceObjects>().Invoke(nameof(SliceObjects.Cutting), 0.01f);
-        Destroy(newPlane, 0.01f); 
+        Destroy(newPlane, 0.01f);
     }
 
     // カメラを移動する関数
@@ -192,5 +163,39 @@ public class GameControl : MonoBehaviour
         Camera.main.transform.position = new Vector3(8, 2, 0); // カメラを上方向に移動
         Camera.main.transform.rotation = Quaternion.Euler(0, 0, 0); // カメラの向きを上に向ける
         Debug.Log("カメラが移動しました");
+    }
+
+    void Result()
+    {
+        GameObject[] sliceables = GameObject.FindGameObjectsWithTag("Sliceable");
+        float[] volumeList = new float[sliceables.Length];
+        foreach (GameObject obj in sliceables)
+        {
+            //Rigidbodyを取得し、kinematicをfalseに設定
+            Rigidbody rb = obj.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.isKinematic = false;
+            }
+            else
+            {
+                Debug.LogWarning("Rigidbodyが見つかりません: " + obj.name);
+            }
+            // TofuPieceスクリプトを取得し、体積を計算
+            TofuVolume tofuPiece = obj.GetComponent<TofuVolume>();
+            if (tofuPiece != null)
+            {
+                float volume = tofuPiece.VolumeOfMesh(obj.GetComponent<MeshFilter>().mesh, obj.transform);
+                volumeList[System.Array.IndexOf(sliceables, obj)] = volume;
+            }
+            else
+            {
+                Debug.LogWarning("TofuPieceスクリプトが見つかりません: " + obj.name);
+            }
+        }
+        Debug.Log("VolumeList: " + string.Join(", ", volumeList));
+        Debug.Log("Total Volume: " + volumeList.Sum());
+        Debug.Log("最小値: " + volumeList.Min());
+        Debug.Log("最大値: " + volumeList.Max());
     }
 }
