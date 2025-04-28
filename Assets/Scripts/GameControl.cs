@@ -23,8 +23,8 @@ public class GameControl : MonoBehaviour
     private Vector3 TofuPos; // Tofuの位置
     private int cutCount = 0; // カット回数をカウント
     private string cameraPos = "Top"; // カメラの位置
-    private Vector3 cameraPosSide = new Vector3(8, 2, 0); // カメラの位置（上から）
-    private Vector3 cameraPosTop = new Vector3(8, 3.5f, 2); // カメラの位置（横から）
+    private Vector3 cameraPosSide = new Vector3(8, 3, 0); // カメラの位置（上から）
+    private Vector3 cameraPosTop = new Vector3(8, 4.5f, 2); // カメラの位置（横から）
     private float cameraTopDistance = 1.25f; // カメラからTofuの面までの距離
     private float cameraSideDistance = 1.5f; // カメラからTofuの面までの距離
     private float startTime;
