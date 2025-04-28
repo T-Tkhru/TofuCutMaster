@@ -27,11 +27,14 @@ public class GameControl : MonoBehaviour
     private Vector3 cameraPosTop = new Vector3(8, 4.5f, 2); // カメラの位置（横から）
     private float cameraTopDistance = 1.25f; // カメラからTofuの面までの距離
     private float cameraSideDistance = 1.5f; // カメラからTofuの面までの距離
+    private bool start = false; // ゲーム開始フラグ
+    
     private float startTime;
     private float playTime; // プレイ時間
     private int cutSuccessFlag;
 
     private bool result = false; // 結果表示フラグ
+    public GameObject startUI; // スタート画面のUIオブジェクト
     public GameObject playingUI;
     [SerializeField]
     private GameObject timer; // 結果表示用のUIオブジェクト
@@ -54,17 +57,31 @@ public class GameControl : MonoBehaviour
             Debug.LogError("Tofuオブジェクトが見つかりません！");
         }
 
-        startTime = Time.time; // ゲーム開始時間を記録
+        
 
 
 
     }
-
+    void StartGame()
+    {
+        start = true; // ゲーム開始フラグを立てる
+        playingUI.SetActive(true); // UIをアクティブにする
+        startUI.SetActive(false); // スタート画面のUIを非アクティブにする
+        startTime = Time.time; // ゲーム開始時間を記録
+    }
     async void Update()
     {
         var currentPlayingTime = Time.time - startTime; // 現在のプレイ時間を計算
 
         if (result) return; // 結果表示中は処理をスキップ
+        if (!start)
+        {
+            if (Input.GetKeyDown(KeyCode.Return))
+            {
+                StartGame(); // ゲーム開始
+            }
+            return; // ゲームが開始されていない場合は処理をスキップ
+        }
         var timerText = timer.GetComponent<TMPro.TMP_Text>();
         if (timerText != null)
         {
