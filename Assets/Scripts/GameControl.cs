@@ -1,11 +1,11 @@
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.Linq;
 using System.Collections.Generic;
 using unityroom.Api;
 using System;
 using System.Collections;
-using UnityEngine.UI;
 
 public class GameControl : MonoBehaviour
 {
@@ -28,7 +28,7 @@ public class GameControl : MonoBehaviour
     private float cameraTopDistance = 1.25f; // カメラからTofuの面までの距離
     private float cameraSideDistance = 1.5f; // カメラからTofuの面までの距離
     private bool start = false; // ゲーム開始フラグ
-    
+
     private float startTime;
     private float playTime; // プレイ時間
     private int cutSuccessFlag;
@@ -56,11 +56,7 @@ public class GameControl : MonoBehaviour
         {
             Debug.LogError("Tofuオブジェクトが見つかりません！");
         }
-
-        
-
-
-
+        StartCoroutine(MoveCameraSmoothly(cameraPosTop, Quaternion.Euler(90, 0, 0), 1.5f)); // カメラを移動
     }
     void StartGame()
     {
@@ -267,6 +263,7 @@ public class GameControl : MonoBehaviour
 
     private IEnumerator MoveCameraSmoothly(Vector3 targetPosition, Quaternion targetRotation, float duration)
     {
+        Debug.Log("カメラが移動します");
         float timeElapsed = 0f;
         Vector3 startPosition = Camera.main.transform.position;
         Quaternion startRotation = Camera.main.transform.rotation;
@@ -341,7 +338,7 @@ public class GameControl : MonoBehaviour
     }
     private IEnumerator ShowResults()
     {
-    //スコアを表示
+        //スコアを表示(個数、タイム、正確性、カット回数？)
         // 個数用
         var countText = resultTexts[0].GetComponent<TMPro.TMP_Text>();
         if (countText != null) countText.text = $"個数: {resultCount}個";
@@ -353,10 +350,20 @@ public class GameControl : MonoBehaviour
         // スコア用
         var scoreText = resultTexts[2].GetComponent<TMPro.TMP_Text>();
         if (scoreText != null) scoreText.text = $"スコア: {resultScore:F2}点";
-    foreach (GameObject textObj in resultTexts)
+        foreach (GameObject textObj in resultTexts)
         {
             textObj.SetActive(true);
             yield return new WaitForSeconds(0.8f);
         }
+    }
+    public void RestartGame()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name); // 現在のシーンを再読み込み
+    }
+    public void Title()
+    {
+        // タイトル画面に戻る処理をここに追加
+        SceneManager.LoadScene("StartMenu");
+
     }
 }
