@@ -27,23 +27,22 @@ public class GameControl : MonoBehaviour
     private Vector3 cameraPosTop = new Vector3(8, 3.5f, 2); // カメラの位置（横から）
     private float cameraTopDistance = 1.25f; // カメラからTofuの面までの距離
     private float cameraSideDistance = 1.5f; // カメラからTofuの面までの距離
-    public int cutLimitTop = 4; // 上からのカット回数制限
-    public int cutLimitSide = 1; // 横からのカット回数制限
     private float startTime;
     private float playTime; // プレイ時間
     private int cutSuccessFlag;
 
     private bool result = false; // 結果表示フラグ
-    public GameObject ControlUI;
-    public GameObject ResultUI; // 結果表示用のUIオブジェクト
+    public GameObject playingUI;
+    [SerializeField]
+    private GameObject timer; // 結果表示用のUIオブジェクト
+    public GameObject resultUI; // 結果表示用のUIオブジェクト
+
     [SerializeField]
     private List<GameObject> resultTexts; // 表示したいテキストのリスト
     private int resultCount;
     private float resultScore;
     void Start()
     {
-        Debug.Log("GameControl スクリプトが開始されました。");
-
         // Tofuの位置を取得
         GameObject targetCube = GameObject.Find("Tofu");
         if (targetCube != null)
@@ -55,17 +54,26 @@ public class GameControl : MonoBehaviour
             Debug.LogError("Tofuオブジェクトが見つかりません！");
         }
 
-        cutLimitTop = CutNumManager.Instance.cutLimitTop;
-        cutLimitSide = CutNumManager.Instance.cutLimitSide;
-
         startTime = Time.time; // ゲーム開始時間を記録
+
 
 
     }
 
     async void Update()
     {
+        var currentPlayingTime = Time.time - startTime; // 現在のプレイ時間を計算
+
         if (result) return; // 結果表示中は処理をスキップ
+        var timerText = timer.GetComponent<TMPro.TMP_Text>();
+        if (timerText != null)
+        {
+            timerText.text = $"タイム: {currentPlayingTime:F2}秒"; // タイマーを更新
+        }
+        else
+        {
+            Debug.LogWarning("Timer Textが見つかりません！");
+        }
         // マウスの左ボタンが押された時
         if (Input.GetMouseButtonDown(0))
         {
@@ -129,7 +137,7 @@ public class GameControl : MonoBehaviour
         //スペースキー押下時にカメラを移動
         if (cameraPos == "Top" && Input.GetKeyDown(KeyCode.Space))
         {
-            MoveCamera(cameraPos);
+            MoveCamera();
             cameraPos = "Side";
             foreach (LineRenderer line in topLines)
             {
@@ -143,7 +151,7 @@ public class GameControl : MonoBehaviour
         }
         else if (cameraPos == "Side" && Input.GetKeyDown(KeyCode.Space))
         {
-            MoveCamera(cameraPos);
+            MoveCamera();
             cameraPos = "Top";
             foreach (LineRenderer line in sideLines)
             {
@@ -158,7 +166,7 @@ public class GameControl : MonoBehaviour
         {
             result = true; // 結果表示フラグを立てる
             Debug.Log("終了します");
-            ControlUI.SetActive(false); // UIを非アクティブにする
+            playingUI.SetActive(false); // UIを非アクティブにする
             Camera.main.transform.position = new Vector3(8, 2, 0.4f);
             Camera.main.transform.rotation = Quaternion.Euler(40, 0, 0); // カメラの向きを上に向ける
             await Task.Delay(1000);
@@ -172,7 +180,7 @@ public class GameControl : MonoBehaviour
             }
             Result(); // 結果を表示する関数を呼び出す
             await Task.Delay(2000);
-            ResultUI.SetActive(true); // 結果表示用のUIをアクティブにする
+            resultUI.SetActive(true); // 結果表示用のUIをアクティブにする
             await Task.Delay(1000);
             StartCoroutine(ShowResults());
         }
@@ -225,7 +233,7 @@ public class GameControl : MonoBehaviour
     }
 
     // カメラを移動する関数
-    void MoveCamera(string cameraPos)
+    void MoveCamera()
     {
         if (cameraPos == "Top")
         {
@@ -244,7 +252,6 @@ public class GameControl : MonoBehaviour
 
     void Result()
     {
-        Debug.Log("スタート時間" + startTime);
         Debug.Log("終了時間" + Time.time);
         playTime = Time.time - startTime; // プレイ時間を計算
         Debug.Log("プレイ時間: " + playTime + "秒");
