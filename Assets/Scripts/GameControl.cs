@@ -42,6 +42,8 @@ public class GameControl : MonoBehaviour
     private float resultScore;
     void Start()
     {
+        Debug.Log("GameControl スクリプトが開始されました。");
+
         // Tofuの位置を取得
         GameObject targetCube = GameObject.Find("Tofu");
         if (targetCube != null)
@@ -56,8 +58,7 @@ public class GameControl : MonoBehaviour
         cutLimitTop = CutNumManager.Instance.cutLimitTop;
         cutLimitSide = CutNumManager.Instance.cutLimitSide;
 
-        startTime = Time.time; // ゲーム開始時刻を記録
-
+        startTime = Time.time; // ゲーム開始時間を記録
 
 
     }
@@ -243,6 +244,8 @@ public class GameControl : MonoBehaviour
 
     void Result()
     {
+        Debug.Log("スタート時間" + startTime);
+        Debug.Log("終了時間" + Time.time);
         playTime = Time.time - startTime; // プレイ時間を計算
         Debug.Log("プレイ時間: " + playTime + "秒");
         GameObject[] sliceables = GameObject.FindGameObjectsWithTag("Sliceable");
