@@ -167,9 +167,7 @@ public class GameControl : MonoBehaviour
             result = true; // 結果表示フラグを立てる
             Debug.Log("終了します");
             playingUI.SetActive(false); // UIを非アクティブにする
-            Camera.main.transform.position = new Vector3(8, 2, 0.4f);
-            Camera.main.transform.rotation = Quaternion.Euler(40, 0, 0); // カメラの向きを上に向ける
-            await Task.Delay(1000);
+            StartCoroutine(MoveCameraSmoothly(new Vector3(8, 2, 0.4f), Quaternion.Euler(40, 0, 0), 1.3f));
             foreach (LineRenderer line in topLines)
             {
                 line.gameObject.SetActive(false); // ラインを非アクティブにする
@@ -178,6 +176,7 @@ public class GameControl : MonoBehaviour
             {
                 line.gameObject.SetActive(false); // ラインを非アクティブにする
             }
+            await Task.Delay(2000); // 1秒待機
             Result(); // 結果を表示する関数を呼び出す
             await Task.Delay(2000);
             resultUI.SetActive(true); // 結果表示用のUIをアクティブにする
@@ -247,6 +246,24 @@ public class GameControl : MonoBehaviour
             Camera.main.transform.rotation = Quaternion.Euler(90, 0, 0); // カメラの向きを横に向ける
             Debug.Log("カメラが移動しました");
         }
+    }
+
+    private IEnumerator MoveCameraSmoothly(Vector3 targetPosition, Quaternion targetRotation, float duration)
+    {
+        float timeElapsed = 0f;
+        Vector3 startPosition = Camera.main.transform.position;
+        Quaternion startRotation = Camera.main.transform.rotation;
+
+        while (timeElapsed < duration)
+        {
+            Camera.main.transform.position = Vector3.Lerp(startPosition, targetPosition, timeElapsed / duration);
+            Camera.main.transform.rotation = Quaternion.Slerp(startRotation, targetRotation, timeElapsed / duration);
+            timeElapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        Camera.main.transform.position = targetPosition;
+        Camera.main.transform.rotation = targetRotation;
     }
 
 
