@@ -1,8 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using EzySlice;
-using System.Runtime.InteropServices.WindowsRuntime; // Ezy-Slice フレームワークを利用するために必要
+
 
 public class SliceObjects : MonoBehaviour
 {
@@ -13,6 +11,9 @@ public class SliceObjects : MonoBehaviour
 
     // オーバーラップボックスのサイズ
     private Vector3 overlapBoxSize = new Vector3(1, 0.01f, 1);
+
+    public PhysicsMaterial physicMaterial;
+
 
     void Update()
     {
@@ -30,6 +31,7 @@ public class SliceObjects : MonoBehaviour
         obj.AddComponent<MeshCollider>().convex = true;
         Rigidbody rb = obj.AddComponent<Rigidbody>();
         rb.isKinematic = true;
+        obj.GetComponent<Collider>().material = physicMaterial;
 
         obj.layer = LayerMask.NameToLayer("Sliceable"); // Sliceableレイヤーを適用
         obj.tag = "Sliceable"; // Sliceableタグを適用

@@ -44,6 +44,7 @@ public class GameControl : MonoBehaviour
     private List<GameObject> resultTexts; // 表示したいテキストのリスト
     private int resultCount;
     private float resultScore;
+    private float resultPercent;
     void Start()
     {
         // Tofuの位置を取得
@@ -319,6 +320,7 @@ public class GameControl : MonoBehaviour
         float variance = volumeList.Sum(v => Mathf.Pow(v - average, 2)) / volumeList.Length;
         float standardDeviation = Mathf.Sqrt(variance);
         Debug.Log("標準偏差: " + standardDeviation * 1000);
+        resultPercent = 100 / (1 + standardDeviation * 20); // パーセント表示
         //スコアを計算
         resultCount = volumeList.Length;
         resultScore = MathF.Max(50 - Math.Abs(18 - volumeList.Length) * 5, 0) + MathF.Max(25 - standardDeviation * 1000, 0) + MathF.Max(20 - Mathf.Pow(playTime, 2) / 5, 0) + MathF.Max(20 - cutCount * 2, 0);
@@ -341,19 +343,36 @@ public class GameControl : MonoBehaviour
         //スコアを表示(個数、タイム、正確性、カット回数？)
         // 個数用
         var countText = resultTexts[0].GetComponent<TMPro.TMP_Text>();
-        if (countText != null) countText.text = $"個数: {resultCount}個";
+        if (countText != null) countText.text = $"豆腐の数: {resultCount}個";
+
+        // 正確性用
+        var percentText = resultTexts[1].GetComponent<TMPro.TMP_Text>();
+        if (percentText != null) percentText.text = $"正確性: {resultPercent:F2}%";
+
+        // カット回数用
+        var cutCountText = resultTexts[2].GetComponent<TMPro.TMP_Text>();
+        if (cutCountText != null) cutCountText.text = $"カット回数: {cutCount}回";
 
         // 秒数用
-        var timeText = resultTexts[1].GetComponent<TMPro.TMP_Text>();
+        var timeText = resultTexts[3].GetComponent<TMPro.TMP_Text>();
         if (timeText != null) timeText.text = $"タイム: {playTime:F2}秒";
 
         // スコア用
-        var scoreText = resultTexts[2].GetComponent<TMPro.TMP_Text>();
+        var scoreText = resultTexts[4].GetComponent<TMPro.TMP_Text>();
         if (scoreText != null) scoreText.text = $"スコア: {resultScore:F2}点";
         foreach (GameObject textObj in resultTexts)
         {
-            textObj.SetActive(true);
-            yield return new WaitForSeconds(0.8f);
+            if (textObj.name == "Score")
+            {
+                textObj.SetActive(true); // スコア用のテキストをアクティブにする
+                yield return new WaitForSeconds(1.2f);
+            }
+            else
+            {
+                textObj.SetActive(true); // 他のテキストを非アクティブにする
+                yield return new WaitForSeconds(0.8f);
+            }
+            
         }
     }
     public void RestartGame()
