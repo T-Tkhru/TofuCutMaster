@@ -45,6 +45,13 @@ public class GameControl : MonoBehaviour
     private int resultCount;
     private float resultScore;
     private float resultPercent;
+
+    public AudioClip cutSE;
+    public AudioClip drumrollSE;
+    public AudioClip resultSE;
+    public AudioClip resultSE2;
+    private AudioSource audioSource; // 音声再生用のAudioSource
+    private GameObject BGM;
     void Start()
     {
         // Tofuの位置を取得
@@ -57,7 +64,8 @@ public class GameControl : MonoBehaviour
         {
             Debug.LogError("Tofuオブジェクトが見つかりません！");
         }
-        StartCoroutine(MoveCameraSmoothly(cameraPosTop, Quaternion.Euler(90, 0, 0), 1.5f)); // カメラを移動
+        BGM = GameObject.Find("BGM"); // BGMオブジェクトを取得
+        audioSource = GetComponent<AudioSource>(); // AudioSourceを取得
     }
     void StartGame()
     {
@@ -133,6 +141,7 @@ public class GameControl : MonoBehaviour
                     Destroy(currentLine.gameObject); // ラインを削除
                     return;
                 }
+                audioSource.PlayOneShot(cutSE); // カット音を再生
                 isDragging = false;
                 currentLine.gameObject.SetActive(true);
                 if (cameraPos == "Top")
@@ -178,6 +187,8 @@ public class GameControl : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.Return))
         {
+            BGM.GetComponent<AudioSource>().Stop(); // BGMを停止
+            audioSource.PlayOneShot(drumrollSE); // ドラムロール音を再生
             result = true; // 結果表示フラグを立てる
             Debug.Log("終了します");
             playingUI.SetActive(false); // UIを非アクティブにする
@@ -364,11 +375,18 @@ public class GameControl : MonoBehaviour
         {
             if (textObj.name == "Score")
             {
+                audioSource.PlayOneShot(resultSE2); // スコア音を再生
                 textObj.SetActive(true); // スコア用のテキストをアクティブにする
                 yield return new WaitForSeconds(1.2f);
             }
+            else if (textObj.name == "ButtonGroup")
+            {
+                textObj.SetActive(true); // 他のテキストを非アクティブにする
+                yield return new WaitForSeconds(0.8f);
+            }
             else
             {
+                audioSource.PlayOneShot(resultSE); // スコア音を再生
                 textObj.SetActive(true); // 他のテキストを非アクティブにする
                 yield return new WaitForSeconds(0.8f);
             }
