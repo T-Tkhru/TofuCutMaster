@@ -82,7 +82,7 @@ public class GameControl : MonoBehaviour
         if (result) return; // 結果表示中は処理をスキップ
         if (!start)
         {
-            if (Input.GetKeyDown(KeyCode.Return))
+            if (Input.GetKeyDown(KeyCode.Return) || Input.GetMouseButtonDown(0))
             {
                 StartGame(); // ゲーム開始
             }
