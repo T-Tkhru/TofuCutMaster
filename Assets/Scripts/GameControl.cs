@@ -75,7 +75,7 @@ public class GameControl : MonoBehaviour
         startUI.SetActive(false); // スタート画面のUIを非アクティブにする
         startTime = Time.time; // ゲーム開始時間を記録
     }
-    async void Update()
+    void Update()
     {
         var currentPlayingTime = Time.time - startTime; // 現在のプレイ時間を計算
 
@@ -193,24 +193,32 @@ public class GameControl : MonoBehaviour
             result = true; // 結果表示フラグを立てる
             Debug.Log("終了します");
             playingUI.SetActive(false); // UIを非アクティブにする
-            StartCoroutine(MoveCameraSmoothly(new Vector3(8, 2, 0.4f), Quaternion.Euler(40, 0, 0), 1.3f));
+            // ライン非表示
             foreach (LineRenderer line in topLines)
             {
-                line.gameObject.SetActive(false); // ラインを非アクティブにする
+                line.gameObject.SetActive(false);
             }
             foreach (LineRenderer line in sideLines)
             {
-                line.gameObject.SetActive(false); // ラインを非アクティブにする
+                line.gameObject.SetActive(false);
             }
-            await Task.Delay(2000); // 1秒待機
-            Result(); // 結果を表示する関数を呼び出す
-            await Task.Delay(2000);
-            resultUI.SetActive(true); // 結果表示用のUIをアクティブにする
-            await Task.Delay(1000);
-            StartCoroutine(ShowResults());
+            StartCoroutine(ShowResultSequence()); // 結果表示のコルーチンを開始
         }
     }
 
+    private IEnumerator ShowResultSequence()
+    {
+
+        // カメラ移動（非同期）
+        yield return StartCoroutine(MoveCameraSmoothly(new Vector3(8, 2, 0.4f), Quaternion.Euler(40, 0, 0), 1.3f));
+
+        yield return new WaitForSeconds(2f);
+        Result(); // 結果を表示する関数を呼び出す
+        yield return new WaitForSeconds(2f);
+        resultUI.SetActive(true); // 結果表示UIを有効化
+        yield return new WaitForSeconds(1f);
+        yield return StartCoroutine(ShowResults()); // 結果の詳細表示処理（Coroutine想定）
+    }
 
     // スクリーン座標をワールド座標に変換するヘルパー関数
     Vector3 GetMouseWorldPosition()
