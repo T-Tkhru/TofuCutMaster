@@ -349,7 +349,7 @@ public class GameControl : MonoBehaviour
         }
         else if (GameSettings.selectedMode == "Hard")
         {
-            resultScore = MathF.Max(50 - Math.Abs(48 - volumeList.Length) * 5, 0) + MathF.Max(25 - standardDeviation * 1000, 0) + MathF.Max(20 - Mathf.Pow(playTime, 2) / 7, 0) + MathF.Max(26 - cutCount * 2, 0);
+            resultScore = MathF.Max(50 - Math.Abs(48 - volumeList.Length) * 5, 0) + MathF.Max(25 - standardDeviation * 1000, 0) + MathF.Max(20 - Mathf.Pow(playTime, 2) / 10, 0) + MathF.Max(26 - cutCount * 2, 0);
             if (resultScore >= 100)
             {
                 UnityroomApiClient.Instance.SendScore(2, 100.00f, ScoreboardWriteMode.HighScoreDesc);
