@@ -66,6 +66,7 @@ public class GameControl : MonoBehaviour
         }
         BGM = GameObject.Find("BGM"); // BGMオブジェクトを取得
         audioSource = GetComponent<AudioSource>(); // AudioSourceを取得
+        Debug.Log("Mode: " + GameSettings.selectedMode); // 選択されたモードを表示
     }
     void StartGame()
     {
@@ -334,20 +335,31 @@ public class GameControl : MonoBehaviour
         resultPercent = 100 / (1 + standardDeviation * 20); // パーセント表示
         //スコアを計算
         resultCount = volumeList.Length;
-        resultScore = MathF.Max(50 - Math.Abs(18 - volumeList.Length) * 5, 0) + MathF.Max(25 - standardDeviation * 1000, 0) + MathF.Max(20 - Mathf.Pow(playTime, 2) / 5, 0) + MathF.Max(20 - cutCount * 2, 0);
+        if (GameSettings.selectedMode == "Easy")
+        {
+            resultScore = MathF.Max(50 - Math.Abs(18 - volumeList.Length) * 5, 0) + MathF.Max(25 - standardDeviation * 1000, 0) + MathF.Max(20 - Mathf.Pow(playTime, 2) / 5, 0) + MathF.Max(20 - cutCount * 2, 0);
+            if (resultScore >= 100)
+            {
+                UnityroomApiClient.Instance.SendScore(1, 100.00f, ScoreboardWriteMode.HighScoreDesc);
+            }
+            else
+            {
+                UnityroomApiClient.Instance.SendScore(1, resultScore, ScoreboardWriteMode.HighScoreDesc);
+            }
+        }
+        else if (GameSettings.selectedMode == "Hard")
+        {
+            resultScore = MathF.Max(50 - Math.Abs(48 - volumeList.Length) * 5, 0) + MathF.Max(25 - standardDeviation * 1000, 0) + MathF.Max(20 - Mathf.Pow(playTime, 2) / 7, 0) + MathF.Max(26 - cutCount * 2, 0);
+            if (resultScore >= 100)
+            {
+                UnityroomApiClient.Instance.SendScore(2, 100.00f, ScoreboardWriteMode.HighScoreDesc);
+            }
+            else
+            {
+                UnityroomApiClient.Instance.SendScore(2, resultScore, ScoreboardWriteMode.HighScoreDesc);
+            }
+        }
         Debug.Log("スコア: " + resultScore);
-
-        if (resultScore >= 100)
-        {
-            Debug.Log("スコアが100以上です");
-            UnityroomApiClient.Instance.SendScore(1, 100.00f, ScoreboardWriteMode.HighScoreDesc);
-            UnityroomApiClient.Instance.SendScore(2, playTime, ScoreboardWriteMode.HighScoreAsc);
-        }
-        else
-        {
-            Debug.Log("スコアが100未満です");
-            UnityroomApiClient.Instance.SendScore(1, resultScore, ScoreboardWriteMode.HighScoreDesc);
-        }
     }
     private IEnumerator ShowResults()
     {

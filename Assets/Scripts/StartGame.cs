@@ -5,10 +5,20 @@ public class StartGame : MonoBehaviour
 {
     [SerializeField]
     GameObject RulePanel;
-    public void easyStart()
+    public void EasyStart()
     {
+        GameSettings.selectedMode = "Easy";
         SceneManager.LoadScene("MainGame");
+        
     }
+
+    public void HardStart()
+    {
+        GameSettings.selectedMode = "Hard";
+        SceneManager.LoadScene("MainGame");
+
+    }
+
 
     public void rule()
     {
