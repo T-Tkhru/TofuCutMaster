@@ -217,7 +217,7 @@ public class GameControl : MonoBehaviour
         yield return new WaitForSeconds(2f);
         resultUI.SetActive(true); // 結果表示UIを有効化
         yield return new WaitForSeconds(1f);
-        yield return StartCoroutine(ShowResults()); // 結果の詳細表示処理（Coroutine想定）
+        yield return StartCoroutine(ShowResults());
     }
 
     // スクリーン座標をワールド座標に変換するヘルパー関数
