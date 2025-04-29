@@ -188,6 +188,7 @@ public class GameControl : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.Return))
         {
+            playTime = Time.time - startTime; // プレイ時間を計算
             BGM.GetComponent<AudioSource>().Stop(); // BGMを停止
             audioSource.PlayOneShot(drumrollSE); // ドラムロール音を再生
             result = true; // 結果表示フラグを立てる
@@ -305,7 +306,6 @@ public class GameControl : MonoBehaviour
     void Result()
     {
         Debug.Log("終了時間" + Time.time);
-        playTime = Time.time - startTime; // プレイ時間を計算
         Debug.Log("プレイ時間: " + playTime + "秒");
         GameObject[] sliceables = GameObject.FindGameObjectsWithTag("Sliceable");
         float[] volumeList = new float[sliceables.Length];
