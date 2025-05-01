@@ -9,49 +9,60 @@ using System.Collections;
 
 public class GameControl : MonoBehaviour
 {
+    // 定数
+    private const string CAMERA_POS_TOP = "Top";
+    private const string CAMERA_POS_SIDE = "Side";
+    private const float MIN_DRAG_DISTANCE = 0.8f;
+    private const float LINE_WIDTH = 0.01f;
+    
+    // ゲームオブジェクト
     public GameObject planePrefab;  // 平面のプレハブ
+    [SerializeField] private LineRenderer lineRendererPrefab;
+    public GameObject startUI;      // スタート画面のUIオブジェクト
+    public GameObject playingUI;
+    [SerializeField] private GameObject timer;
+    public GameObject resultUI;     // 結果表示用のUIオブジェクト
+    [SerializeField] private List<GameObject> resultTexts;
+
+    // ドラッグ関連
     private Vector3 dragStartPos;   // ドラッグ開始位置
     private Vector3 dragEndPos;     // ドラッグ終了位置
     private bool isDragging = false; // ドラッグ中かどうか
-
-    [SerializeField]
-    private LineRenderer lineRendererPrefab;
+    
+    // ライン関連
     private LineRenderer currentLine;
     private List<LineRenderer> topLines = new List<LineRenderer>();
     private List<LineRenderer> sideLines = new List<LineRenderer>();
 
-    private Vector3 TofuPos; // Tofuの位置
-    private int cutCount = 0; // カット回数をカウント
-    private string cameraPos = "Top"; // カメラの位置
-    private Vector3 cameraPosSide = new Vector3(8, 3, 0); // カメラの位置（上から）
-    private Vector3 cameraPosTop = new Vector3(8, 4.5f, 2); // カメラの位置（横から）
-    private float cameraTopDistance = 1.25f; // カメラからTofuの面までの距離
-    private float cameraSideDistance = 1.5f; // カメラからTofuの面までの距離
-    private bool start = false; // ゲーム開始フラグ
+    // カメラ関連
+    private Vector3 TofuPos;                                       // Tofuの位置
+    private string cameraPos = CAMERA_POS_TOP;                     // カメラの位置
+    private Vector3 cameraPosSide = new Vector3(8, 3, 0);          // カメラの位置（上から）
+    private Vector3 cameraPosTop = new Vector3(8, 4.5f, 2);        // カメラの位置（横から）
+    private float cameraTopDistance = 1.25f;                       // カメラからTofuの面までの距離
+    private float cameraSideDistance = 1.5f;                       // カメラからTofuの面までの距離
+    
+    // ゲーム状態
+    private bool start = false;       // ゲーム開始フラグ
+    private float startTime;          // ゲーム開始時間
+    private float playTime;           // プレイ時間
+    private int cutCount = 0;         // カット回数をカウント
+    private int cutSuccessFlag;       // カット成功フラグ
+    private bool result = false;      // 結果表示フラグ
 
-    private float startTime;
-    private float playTime; // プレイ時間
-    private int cutSuccessFlag;
+    // 結果関連
+    private int resultCount;          // 結果の個数
+    private float resultScore;        // 結果のスコア
+    private float resultPercent;      // 結果の正確性パーセント
+    
+    // オーディオ関連
+    public AudioClip cutSE;          // カット音
+    public AudioClip drumrollSE;     // ドラムロール音
+    public AudioClip resultSE;       // 結果音
+    public AudioClip resultSE2;      // 結果音2
+    private AudioSource audioSource;  // 音声再生用のAudioSource
+    private GameObject BGM;           // BGM管理オブジェクト
 
-    private bool result = false; // 結果表示フラグ
-    public GameObject startUI; // スタート画面のUIオブジェクト
-    public GameObject playingUI;
-    [SerializeField]
-    private GameObject timer; // 結果表示用のUIオブジェクト
-    public GameObject resultUI; // 結果表示用のUIオブジェクト
-
-    [SerializeField]
-    private List<GameObject> resultTexts; // 表示したいテキストのリスト
-    private int resultCount;
-    private float resultScore;
-    private float resultPercent;
-
-    public AudioClip cutSE;
-    public AudioClip drumrollSE;
-    public AudioClip resultSE;
-    public AudioClip resultSE2;
-    private AudioSource audioSource; // 音声再生用のAudioSource
-    private GameObject BGM;
     void Start()
     {
         // Tofuの位置を取得
@@ -77,134 +88,232 @@ public class GameControl : MonoBehaviour
     }
     void Update()
     {
-        var currentPlayingTime = Time.time - startTime; // 現在のプレイ時間を計算
-
-        if (result) return; // 結果表示中は処理をスキップ
+        // 結果表示中は処理をスキップ
+        if (result) return;
+        
+        // ゲーム開始前の処理
         if (!start)
         {
-            if (Input.GetKeyDown(KeyCode.Return) || Input.GetMouseButtonDown(0))
-            {
-                StartGame(); // ゲーム開始
-            }
-            return; // ゲームが開始されていない場合は処理をスキップ
+            CheckForGameStart();
+            return;
         }
+        
+        // タイマー表示の更新
+        UpdateTimer();
+        
+        // 入力処理
+        HandleDragInput();
+        
+        // カメラ切り替え処理
+        HandleCameraSwitch();
+        
+        // ゲーム終了処理
+        CheckForGameEnd();
+    }
+
+    // ゲーム開始のチェック
+    private void CheckForGameStart()
+    {
+        if (Input.GetKeyDown(KeyCode.Return) || Input.GetMouseButtonDown(0))
+        {
+            StartGame();
+        }
+    }
+
+    // タイマー表示の更新
+    private void UpdateTimer()
+    {
+        var currentPlayingTime = Time.time - startTime;
         var timerText = timer.GetComponent<TMPro.TMP_Text>();
         if (timerText != null)
         {
-            timerText.text = $"タイム: {currentPlayingTime:F2}秒"; // タイマーを更新
+            timerText.text = $"タイム: {currentPlayingTime:F2}秒";
         }
         else
         {
             Debug.LogWarning("Timer Textが見つかりません！");
         }
+    }
+
+    // ドラッグ入力の処理
+    private void HandleDragInput()
+    {
         // マウスの左ボタンが押された時
         if (Input.GetMouseButtonDown(0))
         {
-            isDragging = true;
-            dragStartPos = GetMouseWorldPosition();
-            GameObject lineObj = Instantiate(lineRendererPrefab.gameObject);
-            currentLine = lineObj.GetComponent<LineRenderer>();
-
-            currentLine.positionCount = 2;
-            currentLine.widthMultiplier = 0.01f;
-            //非アクティブ
-            currentLine.gameObject.SetActive(false);
+            StartDragging();
         }
 
         // マウスが動いている間
         if (isDragging)
         {
-            dragEndPos = GetMouseWorldPosition();
-
-            currentLine.SetPosition(0, dragStartPos + Vector3.up * 0.01f);
-            currentLine.SetPosition(1, dragEndPos + Vector3.up * 0.01f);
+            UpdateDragLine();
         }
 
         // マウスの左ボタンが離された時
         if (Input.GetMouseButtonUp(0))
         {
-            if (isDragging)
-            {
-                //スタートからエンドまでの距離を計算し、短い場合は処理をスキップ
-                float distance = Vector3.Distance(dragStartPos, dragEndPos);
-                if (distance < 0.8f)
-                {
-                    Debug.Log("ドラッグ距離が短いため、処理をスキップします。");
-                    isDragging = false;
-                    Destroy(currentLine.gameObject); // ラインを削除
-                    return;
-                }
-                CreatePlaneFromDrag(dragStartPos, dragEndPos, TofuPos);
-                if (cutSuccessFlag == 1)
-                {
-                    Debug.Log("カット失敗");
-                    isDragging = false;
-                    Destroy(currentLine.gameObject); // ラインを削除
-                    return;
-                }
-                audioSource.PlayOneShot(cutSE); // カット音を再生
-                isDragging = false;
-                currentLine.gameObject.SetActive(true);
-                if (cameraPos == "Top")
-                {
-                    topLines.Add(currentLine); // 上からのカットラインを保存
-                }
-                else if (cameraPos == "Side")
-                {
-                    sideLines.Add(currentLine); // 横からのカットラインを保存
-                }
+            EndDragging();
+        }
+    }
 
-                // カット回数をカウント
-                cutCount++;
-            }
-        }
-        //スペースキー押下時にカメラを移動
-        if (cameraPos == "Top" && Input.GetKeyDown(KeyCode.Space))
-        {
-            MoveCamera();
-            cameraPos = "Side";
-            foreach (LineRenderer line in topLines)
-            {
-                line.gameObject.SetActive(false); // ラインを非アクティブにする
-            }
-            foreach (LineRenderer line in sideLines)
-            {
-                line.gameObject.SetActive(true); // ラインをアクティブにする
-            }
+    // ドラッグ開始処理
+    private void StartDragging()
+    {
+        isDragging = true;
+        dragStartPos = GetMouseWorldPosition();
+        
+        // ラインレンダラーの初期化
+        GameObject lineObj = Instantiate(lineRendererPrefab.gameObject);
+        currentLine = lineObj.GetComponent<LineRenderer>();
+        currentLine.positionCount = 2;
+        currentLine.widthMultiplier = LINE_WIDTH;
+        currentLine.gameObject.SetActive(false);
+    }
 
-        }
-        else if (cameraPos == "Side" && Input.GetKeyDown(KeyCode.Space))
+    // ドラッグ中の処理
+    private void UpdateDragLine()
+    {
+        dragEndPos = GetMouseWorldPosition();
+        
+        // ラインの位置を更新
+        currentLine.SetPosition(0, dragStartPos + Vector3.up * 0.01f);
+        currentLine.SetPosition(1, dragEndPos + Vector3.up * 0.01f);
+    }
+
+    // ドラッグ終了処理
+    private void EndDragging()
+    {
+        if (!isDragging) return;
+        
+        // ドラッグ距離のチェック
+        float distance = Vector3.Distance(dragStartPos, dragEndPos);
+        if (distance < MIN_DRAG_DISTANCE)
         {
-            MoveCamera();
-            cameraPos = "Top";
-            foreach (LineRenderer line in sideLines)
-            {
-                line.gameObject.SetActive(false); // ラインを非アクティブにする
-            }
-            foreach (LineRenderer line in topLines)
-            {
-                line.gameObject.SetActive(true); // ラインをアクティブにする
-            }
+            CancelDragging("ドラッグ距離が短いため、処理をスキップします。");
+            return;
         }
+        
+        // 平面を生成してカット処理
+        CreatePlaneFromDrag(dragStartPos, dragEndPos, TofuPos);
+        
+        // カット失敗時の処理
+        if (cutSuccessFlag == 1)
+        {
+            CancelDragging("カット失敗");
+            return;
+        }
+        
+        // カット成功時の処理
+        CompleteDragging();
+    }
+
+    // ドラッグをキャンセル
+    private void CancelDragging(string message)
+    {
+        Debug.Log(message);
+        isDragging = false;
+        Destroy(currentLine.gameObject);
+    }
+
+    // ドラッグを完了
+    private void CompleteDragging()
+    {
+        audioSource.PlayOneShot(cutSE);
+        isDragging = false;
+        currentLine.gameObject.SetActive(true);
+        
+        // カメラ位置に応じてラインを保存
+        if (cameraPos == CAMERA_POS_TOP)
+        {
+            topLines.Add(currentLine);
+        }
+        else if (cameraPos == CAMERA_POS_SIDE)
+        {
+            sideLines.Add(currentLine);
+        }
+        
+        // カット回数をカウント
+        cutCount++;
+    }
+
+    // カメラ切り替えの処理
+    private void HandleCameraSwitch()
+    {
+        if (cameraPos == CAMERA_POS_TOP && Input.GetKeyDown(KeyCode.Space))
+        {
+            SwitchCameraToSide();
+        }
+        else if (cameraPos == CAMERA_POS_SIDE && Input.GetKeyDown(KeyCode.Space))
+        {
+            SwitchCameraToTop();
+        }
+    }
+
+    // カメラを横向きに切り替え
+    private void SwitchCameraToSide()
+    {
+        MoveCamera();
+        cameraPos = CAMERA_POS_SIDE;
+        
+        // ラインの表示/非表示を切り替え
+        SetLinesVisibility(topLines, false);
+        SetLinesVisibility(sideLines, true);
+    }
+
+    // カメラを上向きに切り替え
+    private void SwitchCameraToTop()
+    {
+        MoveCamera();
+        cameraPos = CAMERA_POS_TOP;
+        
+        // ラインの表示/非表示を切り替え
+        SetLinesVisibility(sideLines, false);
+        SetLinesVisibility(topLines, true);
+    }
+
+    // ラインの表示/非表示を設定
+    private void SetLinesVisibility(List<LineRenderer> lines, bool isVisible)
+    {
+        foreach (LineRenderer line in lines)
+        {
+            line.gameObject.SetActive(isVisible);
+        }
+    }
+
+    // ゲーム終了のチェック
+    private void CheckForGameEnd()
+    {
         if (Input.GetKeyDown(KeyCode.Return))
         {
-            playTime = Time.time - startTime; // プレイ時間を計算
-            BGM.GetComponent<AudioSource>().Stop(); // BGMを停止
-            audioSource.PlayOneShot(drumrollSE); // ドラムロール音を再生
-            result = true; // 結果表示フラグを立てる
-            Debug.Log("終了します");
-            playingUI.SetActive(false); // UIを非アクティブにする
-            // ライン非表示
-            foreach (LineRenderer line in topLines)
-            {
-                line.gameObject.SetActive(false);
-            }
-            foreach (LineRenderer line in sideLines)
-            {
-                line.gameObject.SetActive(false);
-            }
-            StartCoroutine(ShowResultSequence()); // 結果表示のコルーチンを開始
+            EndGame();
         }
+    }
+
+    // ゲーム終了処理
+    private void EndGame()
+    {
+        // 時間計測を終了
+        playTime = Time.time - startTime;
+        
+        // BGM停止・効果音再生
+        BGM.GetComponent<AudioSource>().Stop();
+        audioSource.PlayOneShot(drumrollSE);
+        
+        // 結果表示フラグを立てる
+        result = true;
+        
+        Debug.Log("終了します");
+        
+        // UI関連の処理
+        playingUI.SetActive(false);
+        
+        // すべてのラインを非表示
+        SetLinesVisibility(topLines, false);
+        SetLinesVisibility(sideLines, false);
+        
+        // 結果表示シーケンスを開始
+        StartCoroutine(ShowResultSequence());
     }
 
     private IEnumerator ShowResultSequence()
@@ -225,11 +334,11 @@ public class GameControl : MonoBehaviour
     Vector3 GetMouseWorldPosition()
     {
         Vector3 mousePosition = Input.mousePosition;
-        if (cameraPos == "Top")
+        if (cameraPos == CAMERA_POS_TOP)
         {
             mousePosition.z = cameraTopDistance;  // カメラからTofuの面までの距離
         }
-        else if (cameraPos == "Side")
+        else if (cameraPos == CAMERA_POS_SIDE)
         {
             mousePosition.z = cameraSideDistance;  // カメラからTofuの面までの距離
         }
@@ -239,180 +348,311 @@ public class GameControl : MonoBehaviour
     // ドラッグ開始位置と終了位置から平面を生成する
     void CreatePlaneFromDrag(Vector3 startPos, Vector3 endPos, Vector3 cubeCenterPos)
     {
-        Vector3 centerPos = (startPos + endPos) / 2; // ドラッグの中心位置
-        if (cameraPos == "Top")
-        {
-            centerPos.y = cubeCenterPos.y;
-        }
-        else if (cameraPos == "Side")
-        {
-            centerPos.z = cubeCenterPos.z;
-        }
+        // 定数
+        const float PLANE_SCALE_X = 0.2f;
+        const float PLANE_SCALE_Y = 0.1f;
+        const float PLANE_SCALE_Z = 0.2f;
+        const float PLANE_LIFETIME = 0.01f;
+        
+        // ドラッグの中心位置を計算
+        Vector3 centerPos = (startPos + endPos) / 2;
+        
+        // カメラ位置に応じて座標を調整
+        AdjustPositionBasedOnCamera(ref centerPos, cubeCenterPos);
 
-        Vector3 scale = new Vector3(0.2f, 0.1f, 0.2f);  // スケール
-
+        // 平面のスケールを設定
+        Vector3 scale = new Vector3(PLANE_SCALE_X, PLANE_SCALE_Y, PLANE_SCALE_Z);
+        
+        // 平面を生成
         GameObject newPlane = Instantiate(planePrefab, centerPos, Quaternion.identity);
         newPlane.transform.localScale = scale;
 
-        // 平面の向き（ドラッグ範囲に合わせる）
+        // 平面の向きを設定
+        SetPlaneRotation(newPlane, startPos, endPos);
+        
+        // カット処理を実行
+        cutSuccessFlag = newPlane.GetComponent<SliceObjects>().Cutting();
+        
+        // 平面を短時間で削除
+        Destroy(newPlane, PLANE_LIFETIME);
+    }
+    
+    // カメラ位置に応じて座標を調整
+    private void AdjustPositionBasedOnCamera(ref Vector3 position, Vector3 centerPos)
+    {
+        if (cameraPos == CAMERA_POS_TOP)
+        {
+            position.y = centerPos.y;
+        }
+        else if (cameraPos == CAMERA_POS_SIDE)
+        {
+            position.z = centerPos.z;
+        }
+    }
+    
+    // 平面の回転を設定
+    private void SetPlaneRotation(GameObject plane, Vector3 startPos, Vector3 endPos)
+    {
         Vector3 direction = endPos - startPos;
         Quaternion rotation = Quaternion.LookRotation(direction);
-        newPlane.transform.rotation = rotation;
-        if (cameraPos == "Top")
+        plane.transform.rotation = rotation;
+        
+        if (cameraPos == CAMERA_POS_TOP)
         {
-            newPlane.transform.Rotate(0, 0, 90);
+            plane.transform.Rotate(0, 0, 90);
         }
-        cutSuccessFlag = newPlane.GetComponent<SliceObjects>().Cutting();
-        Destroy(newPlane, 0.01f);
     }
 
     // カメラを移動する関数
     void MoveCamera()
     {
-        if (cameraPos == "Top")
+        if (cameraPos == CAMERA_POS_TOP)
         {
-            Camera.main.transform.position = cameraPosSide;
-            Camera.main.transform.rotation = Quaternion.Euler(0, 0, 0); // カメラの向きを上に向ける
-            Debug.Log("カメラが移動しました");
+            // トップからサイドへ
+            MoveCameraTo(cameraPosSide, Quaternion.Euler(0, 0, 0));
         }
-        else if (cameraPos == "Side")
+        else if (cameraPos == CAMERA_POS_SIDE)
         {
-            Camera.main.transform.position = cameraPosTop;
-            Camera.main.transform.rotation = Quaternion.Euler(90, 0, 0); // カメラの向きを横に向ける
-            Debug.Log("カメラが移動しました");
+            // サイドからトップへ
+            MoveCameraTo(cameraPosTop, Quaternion.Euler(90, 0, 0));
         }
     }
 
+    // カメラを指定位置に移動
+    private void MoveCameraTo(Vector3 position, Quaternion rotation)
+    {
+        Camera.main.transform.position = position;
+        Camera.main.transform.rotation = rotation;
+        Debug.Log("カメラが移動しました");
+    }
+
+    // カメラをスムーズに移動
     private IEnumerator MoveCameraSmoothly(Vector3 targetPosition, Quaternion targetRotation, float duration)
     {
-        Debug.Log("カメラが移動します");
+        Debug.Log("カメラがスムーズに移動します");
         float timeElapsed = 0f;
         Vector3 startPosition = Camera.main.transform.position;
         Quaternion startRotation = Camera.main.transform.rotation;
 
         while (timeElapsed < duration)
         {
-            Camera.main.transform.position = Vector3.Lerp(startPosition, targetPosition, timeElapsed / duration);
-            Camera.main.transform.rotation = Quaternion.Slerp(startRotation, targetRotation, timeElapsed / duration);
+            float t = timeElapsed / duration;
+            Camera.main.transform.position = Vector3.Lerp(startPosition, targetPosition, t);
+            Camera.main.transform.rotation = Quaternion.Slerp(startRotation, targetRotation, t);
             timeElapsed += Time.deltaTime;
             yield return null;
         }
 
-        Camera.main.transform.position = targetPosition;
-        Camera.main.transform.rotation = targetRotation;
+        // 最終位置を確実に設定
+        MoveCameraTo(targetPosition, targetRotation);
     }
 
-
+    // 物理演算の有効化とスライスの評価を行う
     void Result()
     {
         Debug.Log("終了時間" + Time.time);
         Debug.Log("プレイ時間: " + playTime + "秒");
+        
+        // スライスされたオブジェクトを取得し評価
+        float[] volumeList = EvaluateSlicedObjects();
+        
+        // 標準偏差を計算
+        float standardDeviation = CalculateStandardDeviation(volumeList);
+        Debug.Log("標準偏差: " + standardDeviation * 1000);
+        
+        // パーセント表示の計算
+        resultPercent = 100 / (1 + standardDeviation * 20);
+        
+        // 結果の数をセット
+        resultCount = volumeList.Length;
+        
+        // スコアを計算して送信
+        CalculateAndSubmitScore(volumeList.Length, standardDeviation);
+        
+        Debug.Log("スコア: " + resultScore);
+    }
+
+    // スライスされたオブジェクトを評価する
+    private float[] EvaluateSlicedObjects()
+    {
         GameObject[] sliceables = GameObject.FindGameObjectsWithTag("Sliceable");
         float[] volumeList = new float[sliceables.Length];
-        foreach (GameObject obj in sliceables)
+        
+        for (int i = 0; i < sliceables.Length; i++)
         {
-            //Rigidbodyを取得し、kinematicをfalseに設定
-            Rigidbody rb = obj.GetComponent<Rigidbody>();
-            if (rb != null)
-            {
-                rb.isKinematic = false;
-            }
-            else
-            {
-                Debug.LogWarning("Rigidbodyが見つかりません: " + obj.name);
-            }
-            // TofuPieceスクリプトを取得し、体積を計算
-            TofuVolume tofuPiece = obj.GetComponent<TofuVolume>();
-            if (tofuPiece != null)
-            {
-                float volume = tofuPiece.VolumeOfMesh(obj.GetComponent<MeshFilter>().mesh, obj.transform);
-                volumeList[System.Array.IndexOf(sliceables, obj)] = volume;
-            }
-            else
-            {
-                Debug.LogWarning("TofuPieceスクリプトが見つかりません: " + obj.name);
-            }
+            GameObject obj = sliceables[i];
+            
+            // Rigidbodyを有効化
+            EnableRigidbody(obj);
+            
+            // 体積を計算
+            volumeList[i] = CalculateObjectVolume(obj);
         }
+        
         Debug.Log("VolumeList: " + string.Join(", ", volumeList));
         Debug.Log("個数: " + volumeList.Length);
-        //標準偏差を計算
-        float average = volumeList.Average();
-        float variance = volumeList.Sum(v => Mathf.Pow(v - average, 2)) / volumeList.Length;
-        float standardDeviation = Mathf.Sqrt(variance);
-        Debug.Log("標準偏差: " + standardDeviation * 1000);
-        resultPercent = 100 / (1 + standardDeviation * 20); // パーセント表示
-        //スコアを計算
-        resultCount = volumeList.Length;
+        
+        return volumeList;
+    }
+    
+    // Rigidbodyを有効化する
+    private void EnableRigidbody(GameObject obj)
+    {
+        Rigidbody rb = obj.GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.isKinematic = false;
+        }
+        else
+        {
+            Debug.LogWarning("Rigidbodyが見つかりません: " + obj.name);
+        }
+    }
+    
+    // オブジェクトの体積を計算する
+    private float CalculateObjectVolume(GameObject obj)
+    {
+        TofuVolume tofuPiece = obj.GetComponent<TofuVolume>();
+        if (tofuPiece != null)
+        {
+            return tofuPiece.VolumeOfMesh(obj.GetComponent<MeshFilter>().mesh, obj.transform);
+        }
+        else
+        {
+            Debug.LogWarning("TofuPieceスクリプトが見つかりません: " + obj.name);
+            return 0;
+        }
+    }
+    
+    // 標準偏差を計算する
+    private float CalculateStandardDeviation(float[] values)
+    {
+        if (values.Length == 0) return 0;
+        
+        float average = values.Average();
+        float variance = values.Sum(v => Mathf.Pow(v - average, 2)) / values.Length;
+        return Mathf.Sqrt(variance);
+    }
+    
+    // スコアを計算して送信する
+    private void CalculateAndSubmitScore(int pieceCount, float standardDeviation)
+    {
         if (GameSettings.selectedMode == "Easy")
         {
-            resultScore = MathF.Max(50 - Math.Abs(18 - volumeList.Length) * 5, 0) + MathF.Max(25 - standardDeviation * 1000, 0) + MathF.Max(20 - Mathf.Pow(playTime, 2) / 5, 0) + MathF.Max(20 - cutCount * 2, 0);
-            if (resultScore >= 100)
-            {
-                UnityroomApiClient.Instance.SendScore(1, 100.00f, ScoreboardWriteMode.HighScoreDesc);
-            }
-            else
-            {
-                UnityroomApiClient.Instance.SendScore(1, resultScore, ScoreboardWriteMode.HighScoreDesc);
-            }
+            CalculateEasyModeScore(pieceCount, standardDeviation);
         }
         else if (GameSettings.selectedMode == "Hard")
         {
-            resultScore = MathF.Max(50 - Math.Abs(48 - volumeList.Length) * 5, 0) + MathF.Max(25 - standardDeviation * 1000, 0) + MathF.Max(20 - Mathf.Pow(playTime, 2) / 10, 0) + MathF.Max(26 - cutCount * 2, 0);
-            if (resultScore >= 100)
-            {
-                UnityroomApiClient.Instance.SendScore(2, 100.00f, ScoreboardWriteMode.HighScoreDesc);
-            }
-            else
-            {
-                UnityroomApiClient.Instance.SendScore(2, resultScore, ScoreboardWriteMode.HighScoreDesc);
-            }
+            CalculateHardModeScore(pieceCount, standardDeviation);
         }
-        Debug.Log("スコア: " + resultScore);
     }
+    
+    // イージーモードのスコア計算
+    private void CalculateEasyModeScore(int pieceCount, float standardDeviation)
+    {
+        // 各項目のスコアを計算
+        float countScore = MathF.Max(50 - Math.Abs(18 - pieceCount) * 5, 0);
+        float accuracyScore = MathF.Max(25 - standardDeviation * 1000, 0);
+        float timeScore = MathF.Max(20 - Mathf.Pow(playTime, 2) / 5, 0);
+        float cutScore = MathF.Max(20 - cutCount * 2, 0);
+        
+        // 合計スコアを計算
+        resultScore = countScore + accuracyScore + timeScore + cutScore;
+        
+        // スコアを送信
+        float scoreToSubmit = resultScore >= 100 ? 100.0f : resultScore;
+        UnityroomApiClient.Instance.SendScore(1, scoreToSubmit, ScoreboardWriteMode.HighScoreDesc);
+    }
+    
+    // ハードモードのスコア計算
+    private void CalculateHardModeScore(int pieceCount, float standardDeviation)
+    {
+        // 各項目のスコアを計算
+        float countScore = MathF.Max(50 - Math.Abs(48 - pieceCount) * 5, 0);
+        float accuracyScore = MathF.Max(25 - standardDeviation * 1000, 0);
+        float timeScore = MathF.Max(20 - Mathf.Pow(playTime, 2) / 10, 0);
+        float cutScore = MathF.Max(26 - cutCount * 2, 0);
+        
+        // 合計スコアを計算
+        resultScore = countScore + accuracyScore + timeScore + cutScore;
+        
+        // スコアを送信
+        float scoreToSubmit = resultScore >= 100 ? 100.0f : resultScore;
+        UnityroomApiClient.Instance.SendScore(2, scoreToSubmit, ScoreboardWriteMode.HighScoreDesc);
+    }
+
     private IEnumerator ShowResults()
     {
-        //スコアを表示(個数、タイム、正確性、カット回数？)
-        // 個数用
-        var countText = resultTexts[0].GetComponent<TMPro.TMP_Text>();
-        if (countText != null) countText.text = $"豆腐の数: {resultCount}個";
-
-        // 正確性用
-        var percentText = resultTexts[1].GetComponent<TMPro.TMP_Text>();
-        if (percentText != null) percentText.text = $"正確性: {resultPercent:F2}%";
-
-        // カット回数用
-        var cutCountText = resultTexts[2].GetComponent<TMPro.TMP_Text>();
-        if (cutCountText != null) cutCountText.text = $"カット回数: {cutCount}回";
-
-        // 秒数用
-        var timeText = resultTexts[3].GetComponent<TMPro.TMP_Text>();
-        if (timeText != null) timeText.text = $"タイム: {playTime:F2}秒";
-
-        // スコア用
-        var scoreText = resultTexts[4].GetComponent<TMPro.TMP_Text>();
-        if (scoreText != null) scoreText.text = $"スコア: {resultScore:F2}点";
-        foreach (GameObject textObj in resultTexts)
+        // 結果テキストを設定
+        SetupResultTexts();
+        
+        // テキストを順番に表示
+        yield return DisplayResultTextsSequentially();
+    }
+    
+    // 結果テキストの設定
+    private void SetupResultTexts()
+    {
+        // 個数
+        UpdateResultText(0, $"豆腐の数: {resultCount}個");
+        
+        // 正確性
+        UpdateResultText(1, $"正確性: {resultPercent:F2}%");
+        
+        // カット回数
+        UpdateResultText(2, $"カット回数: {cutCount}回");
+        
+        // 秒数
+        UpdateResultText(3, $"タイム: {playTime:F2}秒");
+        
+        // スコア
+        UpdateResultText(4, $"スコア: {resultScore:F2}点");
+    }
+    
+    // 指定indexのテキストを更新
+    private void UpdateResultText(int index, string text)
+    {
+        if (index >= 0 && index < resultTexts.Count)
         {
-            if (textObj.name == "Score")
+            var textComponent = resultTexts[index].GetComponent<TMPro.TMP_Text>();
+            if (textComponent != null)
             {
-                audioSource.PlayOneShot(resultSE2); // スコア音を再生
-                textObj.SetActive(true); // スコア用のテキストをアクティブにする
-                yield return new WaitForSeconds(1.2f);
+                textComponent.text = text;
             }
-            else if (textObj.name == "ButtonGroup")
-            {
-                textObj.SetActive(true); // 他のテキストを非アクティブにする
-                yield return new WaitForSeconds(0.8f);
-            }
-            else
-            {
-                audioSource.PlayOneShot(resultSE); // スコア音を再生
-                textObj.SetActive(true); // 他のテキストを非アクティブにする
-                yield return new WaitForSeconds(0.8f);
-            }
-            
         }
     }
+    
+    // テキストを順番に表示
+    private IEnumerator DisplayResultTextsSequentially()
+    {
+        const float SCORE_DISPLAY_DELAY = 1.2f;
+        const float NORMAL_DISPLAY_DELAY = 0.8f;
+        
+        foreach (GameObject textObj in resultTexts)
+        {
+            // スコア表示の場合
+            if (textObj.name == "Score")
+            {
+                audioSource.PlayOneShot(resultSE2);
+                textObj.SetActive(true);
+                yield return new WaitForSeconds(SCORE_DISPLAY_DELAY);
+            }
+            // ボタングループの場合
+            else if (textObj.name == "ButtonGroup")
+            {
+                textObj.SetActive(true);
+                yield return new WaitForSeconds(NORMAL_DISPLAY_DELAY);
+            }
+            // その他の結果表示の場合
+            else
+            {
+                audioSource.PlayOneShot(resultSE);
+                textObj.SetActive(true);
+                yield return new WaitForSeconds(NORMAL_DISPLAY_DELAY);
+            }
+        }
+    }
+
     public void RestartGame()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name); // 現在のシーンを再読み込み
