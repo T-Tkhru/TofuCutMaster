@@ -2,6 +2,7 @@
 
 豆腐をカットするだけのゲームです  
 切った豆腐のサイズがなるべく均一になるようにカットしてください  
+UnityRoom公開URL⇒https://unityroom.com/games/tofu_cut_master
 
 # 操作方法
 * マウスドラッグ：豆腐をカット（長さが短いとカットされません）
